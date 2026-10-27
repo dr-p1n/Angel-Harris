@@ -1,0 +1,4 @@
+# PRE-LAUNCH: block all crawlers. At launch, replace with "Allow: /" and
+# "Disallow: /admin/", and remove the X-Robots-Tag line in _headers.
+User-agent: *
+Disallow: /
