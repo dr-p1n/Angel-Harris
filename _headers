@@ -7,6 +7,9 @@
   # PRE-LAUNCH: keep the next line (and robots.txt) until the site goes public.
   X-Robots-Tag: noindex, nofollow
 
+/
+  Cache-Control: no-cache
+
 /index.html
   Cache-Control: no-cache
 
