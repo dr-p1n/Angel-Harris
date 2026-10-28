@@ -5,11 +5,8 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const cover = (p, attrs) => h('img', { src: p.cover_url, alt: '', decoding: 'async', ...attrs });
 
-function buildHero(items, site) {
-  if (!items.length) {
-    return h('section', { class: 'hero hero--empty' }, h('p', null, site.settings.tagline || 'Portfolio'));
-  }
-
+// Featured-project carousel (the "showcase" card).
+function buildShowcase(items, site) {
   const slides = items.map((p, i) =>
     h(
       'a',
@@ -25,8 +22,8 @@ function buildHero(items, site) {
     ),
   );
 
-  const count = h('span', { class: 'hero__count', 'aria-live': 'off' });
-  const root = h('section', { class: 'hero', 'aria-roledescription': 'carousel', 'aria-label': 'Featured work' }, slides);
+  const count = h('span', { class: 'hero__count' });
+  const root = h('div', { class: 'showcase', 'aria-roledescription': 'carousel', 'aria-label': 'Featured work' }, slides);
 
   let idx = 0;
   let timer = null;
@@ -59,12 +56,57 @@ function buildHero(items, site) {
   return root;
 }
 
+// Big playful headline built from the editable tagline, plus the featured carousel.
+function buildStage(items, site) {
+  const tagline = site.settings.tagline || 'Brand, development and design.';
+  const headline = h('h1', { class: 'headline' });
+  tagline.split(/\s+/).forEach((word, i) => {
+    const w = h('span', { class: 'w' }, word);
+    w.style.setProperty('--i', i);
+    headline.append(w, ' ');
+  });
+
+  const copy = h(
+    'div',
+    { class: 'stage__copy' },
+    h('p', { class: 'stage__eyebrow' }, 'Angel Harris · Portfolio'),
+    headline,
+    items.length ? h('a', { class: 'stage__cta', href: '#work' }, 'See the work ↓') : null,
+  );
+
+  const stage = h(
+    'section',
+    { class: `stage${items.length ? '' : ' stage--empty'}`, 'aria-label': 'Introduction' },
+    h('span', { class: 'shape shape--ring', 'aria-hidden': 'true' }),
+    h('span', { class: 'shape shape--blob', 'aria-hidden': 'true' }),
+    h('span', { class: 'shape shape--star', 'aria-hidden': 'true' }),
+    copy,
+  );
+  if (items.length) {
+    stage.append(h('div', { class: 'stage__card' }, h('span', { class: 'sticker', 'aria-hidden': 'true' }, 'Fresh', h('br'), 'work'), buildShowcase(items, site)));
+  }
+  return stage;
+}
+
+// Endless scrolling band of category names.
+function buildTicker(site) {
+  const labels = site.categories.map((c) => c.label).filter(Boolean);
+  if (!labels.length) return null;
+  const group = (hidden) => {
+    const reps = Math.max(2, Math.ceil(8 / labels.length));
+    return Array.from({ length: reps }, () => labels).flat().map((l) => h('span', { 'aria-hidden': hidden ? 'true' : null }, l));
+  };
+  return h('div', { class: 'ticker-wrap', 'aria-hidden': 'true' }, h('div', { class: 'ticker' }, h('div', { class: 'ticker__track' }, group(false), group(true))));
+}
+
 function buildWork(projects, site) {
   const used = site.categories.filter((c) => projects.some((p) => p.category === c.slug));
+  const toneOf = (slug) => Math.max(0, site.categories.findIndex((c) => c.slug === slug)) % 5;
+
   const cards = projects.map((p) =>
     h(
       'a',
-      { class: 'card', href: `/work/${p.slug}`, dataset: { cat: p.category } },
+      { class: `card tone-${toneOf(p.category)}`, href: `/work/${p.slug}`, dataset: { cat: p.category } },
       cover(p, { loading: 'lazy' }),
       h(
         'div',
@@ -80,6 +122,23 @@ function buildWork(projects, site) {
   if (!projects.length) {
     section.append(h('p', { class: 'state' }, 'New work is on its way.'));
     return section;
+  }
+
+  // Cards ease in as they scroll into view (skipped for reduced motion / no observer).
+  if ('IntersectionObserver' in window && !reduceMotion) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      }
+    }, { rootMargin: '0px 0px -8% 0px' });
+    cards.forEach((c, i) => {
+      c.classList.add('reveal');
+      c.style.transitionDelay = `${(i % 3) * 70}ms`;
+      io.observe(c);
+    });
   }
 
   const chips = [{ slug: '', label: 'All', n: projects.length }, ...used.map((c) => ({ ...c, n: projects.filter((p) => p.category === c.slug).length }))].map(
@@ -116,7 +175,7 @@ try {
   mountChrome(site, 'home');
   const featured = projects.filter((p) => p.featured && p.cover_url);
   const heroItems = (featured.length ? featured : projects.filter((p) => p.cover_url)).slice(0, 5);
-  clear(app).append(h('h1', { class: 'sr-only' }, 'Angel Harris, portfolio'), buildHero(heroItems, site), buildWork(projects, site));
+  clear(app).append(buildStage(heroItems, site), buildTicker(site), buildWork(projects, site));
   if (location.hash === '#work') document.getElementById('work')?.scrollIntoView();
 } catch (e) {
   showError(app, e.message);

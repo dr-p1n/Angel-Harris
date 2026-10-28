@@ -60,6 +60,9 @@ if you want the branch preview to work.
 6. Redeploy (push a commit, or Retry deployment). Visit `/admin/`, sign in with
    a one-time PIN, and add content.
 
+**Adding another admin later:** Zero Trust → Access → Applications → "Angel Harris admin" →
+Policies → "Allow admins" → add the person's email to the Include rule. No code or redeploy needed.
+
 The admin API also verifies the Access token itself, so it stays closed even if
 the Access policy is misconfigured, and it refuses to run if steps 4-5 are missing.
 
