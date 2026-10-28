@@ -1,5 +1,6 @@
 import { HttpError } from './http.js';
 import { bool, isImageUrl, mediaKey, normalizeEmbed, slugify, str } from './util.js';
+import { STATUSES, cleanDate } from './work.js';
 
 const cleanTags = (v) => {
   const raw = Array.isArray(v) ? v : String(v || '').split(',');
@@ -45,6 +46,9 @@ export function cleanProject(b) {
     cover_url: cover,
     featured: bool(b.featured),
     published: bool(b.published),
+    status: STATUSES.includes(b.status) ? b.status : 'completed',
+    progress: Math.min(100, Math.max(0, Math.round(Number(b.progress) || 0))),
+    due_date: cleanDate(b.due_date, 'Due date'),
     media,
   };
 }

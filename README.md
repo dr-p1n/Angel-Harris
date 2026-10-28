@@ -8,17 +8,17 @@ No framework, no build step, no npm dependencies.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `services.html`, `project.html`, `contact.html` | Public pages (home grid + hero, services, case study, contact form) |
+| `index.html`, `services.html`, `project.html`, `contact.html`, `client.html` | Public pages (home grid + hero, services, case study, contact form, private client progress page) |
 | `assets/` | Shared CSS and JS, placeholder artwork |
 | `admin/` | Admin portal (projects, services, settings), served at `/admin/` |
 | `functions/` | Cloudflare Pages Functions: public API, admin API, image serving, `/work/:slug` |
-| `migrations/` | D1 schema (`0001_init.sql`, `0002_messages.sql`) |
+| `migrations/` | D1 schema (`0001_init.sql`, `0002_messages.sql`, `0003_workspace.sql`) |
 | `seed/sample.sql` | **Sample content for local review only** |
 | `_headers`, `robots.txt` | Security headers and (pre-launch) crawler blocking |
 | `mailer/` | Tiny separate Worker that emails Angel when a contact message arrives |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
-Public routes: `/`, `/work/<slug>`, `/services`, `/contact`. Admin: `/admin/`.
+Public routes: `/`, `/work/<slug>`, `/services`, `/contact`. Private: `/client/<token>` (per-project client link). Admin: `/admin/`.
 
 ## Run it locally
 
@@ -41,7 +41,7 @@ if you want the branch preview to work.
 
 1. **D1 database.** Workers & Pages → D1 → Create database (e.g. `angel-harris-db`).
    Open it → Console → paste and run each file in `migrations/` in order
-   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`).
+   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`, `0003_workspace.sql`).
    (Optional, preview only: also run `seed/sample.sql` to see sample content.)
 2. **R2 bucket.** R2 → Create bucket (e.g. `angel-harris-media`). Keep it private;
    images are served through the site at `/media/...`.
@@ -67,6 +67,22 @@ Policies → "Allow admins" → add the person's email to the Include rule. No c
 
 The admin API also verifies the Access token itself, so it stays closed even if
 the Access policy is misconfigured, and it refuses to run if steps 4-5 are missing.
+
+## Admin tabs
+
+- **Projects**: one workspace for all work. Each project has a status (ongoing / on hold / completed), milestones,
+  deliverables (with links to the files), an update log, and an optional private **client link**. A separate
+  "Portfolio page" section holds the public case study; tick "On site" to publish it.
+- **Operations**: internal task board (urgent / high / normal / low), due dates, repeating tasks that
+  reschedule when completed, a month calendar (tasks, milestones, project due dates), and a daily email
+  digest at 13:00 UTC (empty days send nothing; "Email me the digest now" sends one on demand).
+- **Messages**: contact-form inbox. **Settings**: site text and the public Services page.
+
+### Client links
+A project's client link (`/client/<32-hex token>`) is read-only and shows only items marked "Client sees"
+(progress, milestones, deliverables, updates). Anyone with the link can view it, so treat it like a password.
+Replace the link to invalidate the old one, or turn it off. The pages are never cached or indexed and send no
+referrer. At launch also add `Disallow: /client/` to `robots.txt`.
 
 ## Contact form
 

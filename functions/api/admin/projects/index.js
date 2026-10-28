@@ -4,9 +4,14 @@ import { cleanProject, mediaStatements } from '../../../_lib/projects.js';
 
 export const onRequestGet = handle(async ({ env }) => {
   const { results } = await requireDb(env)
-    .prepare('SELECT * FROM projects ORDER BY position, id')
+    .prepare(
+      `SELECT p.*,
+         (SELECT COUNT(*) FROM milestones WHERE project_id = p.id) AS ms_total,
+         (SELECT COUNT(*) FROM milestones WHERE project_id = p.id AND done = 1) AS ms_done
+       FROM projects p ORDER BY p.position, p.id`,
+    )
     .all();
-  return json({ projects: results.map(shapeProject) });
+  return json({ projects: results.map((r) => shapeProject(r, true)) });
 });
 
 export const onRequestPost = handle(async ({ request, env }) => {
@@ -16,10 +21,10 @@ export const onRequestPost = handle(async ({ request, env }) => {
   try {
     const res = await db
       .prepare(
-        `INSERT INTO projects (slug, title, category, summary, body, year, client, role, tags, cover_url, featured, published, position)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), 0) + 1 FROM projects))`,
+        `INSERT INTO projects (slug, title, category, summary, body, year, client, role, tags, cover_url, featured, published, status, progress, due_date, position)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), 0) + 1 FROM projects))`,
       )
-      .bind(p.slug, p.title, p.category, p.summary, p.body, p.year, p.client, p.role, p.tags, p.cover_url, p.featured, p.published)
+      .bind(p.slug, p.title, p.category, p.summary, p.body, p.year, p.client, p.role, p.tags, p.cover_url, p.featured, p.published, p.status, p.progress, p.due_date)
       .run();
     id = res.meta.last_row_id;
   } catch (e) {
@@ -33,5 +38,5 @@ export const onRequestPost = handle(async ({ request, env }) => {
     throw e;
   }
   const row = await db.prepare('SELECT * FROM projects WHERE id = ?').bind(id).first();
-  return json({ project: shapeProject(row), media: await readMedia(db, id) }, 201);
+  return json({ project: shapeProject(row, true), media: await readMedia(db, id) }, 201);
 });

@@ -4,7 +4,10 @@ export const PUBLIC_SETTINGS = ['tagline', 'about', 'location', 'email', 'instag
 
 export const splitList = (s, sep) => String(s || '').split(sep).map((x) => x.trim()).filter(Boolean);
 
-export const shapeProject = (r) => ({
+export const effectiveProgress = (r) => (r.ms_total ? Math.round((r.ms_done / r.ms_total) * 100) : r.progress || 0);
+
+// Workspace fields (status, progress, due date, client link) are admin-only.
+export const shapeProject = (r, admin = false) => ({
   id: r.id,
   slug: r.slug,
   title: r.title,
@@ -19,6 +22,15 @@ export const shapeProject = (r) => ({
   featured: !!r.featured,
   published: !!r.published,
   position: r.position,
+  ...(admin
+    ? {
+        status: r.status,
+        progress: r.progress,
+        due_date: r.due_date,
+        has_share: !!r.share_token,
+        progress_effective: effectiveProgress(r),
+      }
+    : {}),
 });
 
 export const shapeService = (r) => ({

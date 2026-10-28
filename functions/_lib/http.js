@@ -54,3 +54,10 @@ export function requireDb(env) {
 }
 
 export const isUniqueError = (e) => /UNIQUE constraint/i.test(String(e && e.message));
+
+// Parses a positive integer route parameter.
+export const intId = (v, label = 'id') => {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 1) throw new HttpError(400, `Invalid ${label}`);
+  return n;
+};

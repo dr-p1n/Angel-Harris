@@ -18,7 +18,7 @@ async function load(db, id) {
 export const onRequestGet = handle(async ({ env, params }) => {
   const db = requireDb(env);
   const row = await load(db, getId(params));
-  return json({ project: shapeProject(row), media: await readMedia(db, row.id) });
+  return json({ project: shapeProject(row, true), media: await readMedia(db, row.id) });
 });
 
 export const onRequestPut = handle(async ({ request, env, params }) => {
@@ -33,10 +33,10 @@ export const onRequestPut = handle(async ({ request, env, params }) => {
       db
         .prepare(
           `UPDATE projects SET slug = ?, title = ?, category = ?, summary = ?, body = ?, year = ?, client = ?,
-             role = ?, tags = ?, cover_url = ?, featured = ?, published = ?, updated_at = datetime('now')
+             role = ?, tags = ?, cover_url = ?, featured = ?, published = ?, status = ?, progress = ?, due_date = ?, updated_at = datetime('now')
            WHERE id = ?`,
         )
-        .bind(p.slug, p.title, p.category, p.summary, p.body, p.year, p.client, p.role, p.tags, p.cover_url, p.featured, p.published, id),
+        .bind(p.slug, p.title, p.category, p.summary, p.body, p.year, p.client, p.role, p.tags, p.cover_url, p.featured, p.published, p.status, p.progress, p.due_date, id),
       ...mediaStatements(db, id, p.media),
     ]);
   } catch (e) {
@@ -48,7 +48,7 @@ export const onRequestPut = handle(async ({ request, env, params }) => {
   await deleteOrphans(env, [...uploadedKeys(oldMedia, before.cover_url)].filter((k) => !kept.has(k)));
 
   const row = await load(db, id);
-  return json({ project: shapeProject(row), media: await readMedia(db, id) });
+  return json({ project: shapeProject(row, true), media: await readMedia(db, id) });
 });
 
 // Quick toggles from the project list.

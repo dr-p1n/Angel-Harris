@@ -1,4 +1,4 @@
-# Contact-form mailer Worker (separate from the Pages site).
+# Mailer Worker (separate from the Pages site): contact-form notifications + daily digest.
 # Deploy from this folder:  npx wrangler deploy
 # Set the recipient once:   npx wrangler secret put NOTIFY_TO
 name = "angel-harris-mailer"
@@ -12,3 +12,12 @@ NOTIFY_FROM = "contact@angelharrisportfolio.com"
 
 [[send_email]]
 name = "EMAIL"
+
+# Read-only use: builds the daily digest. (A database id is an identifier, not a credential.)
+[[d1_databases]]
+binding = "DB"
+database_name = "angel-harris-db"
+database_id = "5b3e7f71-e365-4e3d-bff1-cf16f13e3216"
+
+[triggers]
+crons = ["0 13 * * *"]   # 13:00 UTC daily (8am US Eastern / Panama). Empty days send nothing.
