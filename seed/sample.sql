@@ -5,6 +5,7 @@
 DELETE FROM project_media;
 DELETE FROM projects;
 DELETE FROM services;
+DELETE FROM messages;
 
 INSERT INTO projects (id, slug, title, category, summary, body, year, client, role, tags, cover_url, featured, published, position) VALUES
  (1, 'northlight-identity', 'Northlight Identity', 'brand', 'A warm, modular identity system for a coastal coffee roaster.', 'Placeholder case study.
@@ -51,3 +52,7 @@ Print production files', 1, 4);
 
 UPDATE settings SET value = 'Placeholder biography. Angel will replace this text from the admin portal.' WHERE key = 'about';
 UPDATE settings SET value = 'Based anywhere' WHERE key = 'location';
+
+INSERT INTO messages (name, email, message, ip_hash, is_read) VALUES
+ ('Sample Visitor', 'visitor@example.com', 'Hi Angel, we love your work and would like to talk about a brand refresh for our studio. Are you taking new projects this autumn?', 'sample', 0),
+ ('Another Sample', 'hello@example.com', 'Quick question about your rates for a short animation.', 'sample', 1);

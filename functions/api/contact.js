@@ -1,0 +1,52 @@
+import { HttpError, handle, json, readJson, requireDb } from '../_lib/http.js';
+import { str } from '../_lib/util.js';
+
+const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
+const PER_VISITOR = 3; // messages per 15 minutes
+const PER_HOUR = 60; // site-wide ceiling, protects the inbox from floods
+
+async function visitorHash(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  const data = new TextEncoder().encode(`${env.CONTACT_SALT || 'angel-harris'}:${ip}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export const onRequestPost = handle(async ({ request, env }) => {
+  const db = requireDb(env);
+  const origin = request.headers.get('Origin');
+  if (origin && origin !== new URL(request.url).origin) throw new HttpError(403, 'Cross-site request blocked');
+
+  const b = await readJson(request, 16 * 1024);
+
+  // Bots fill the hidden field or submit instantly: pretend it worked, store nothing.
+  if (b.website || Date.now() - Number(b.t || 0) < 2000) return json({ ok: true });
+
+  const name = str(b.name, 100, 'Name');
+  const email = str(b.email, 200, 'Email');
+  const message = str(b.message, 4000, 'Message');
+  if (!name) throw new HttpError(400, 'Please enter your name');
+  if (!EMAIL_RE.test(email)) throw new HttpError(400, 'That email address looks invalid');
+  if (message.length < 10) throw new HttpError(400, 'Please write a slightly longer message');
+  if ((message.match(/https?:\/\//gi) || []).length > 2) throw new HttpError(400, 'Please include at most two links');
+
+  const hash = await visitorHash(request, env);
+  const recent = await db
+    .prepare(
+      `SELECT
+         SUM(CASE WHEN ip_hash = ? AND created_at > datetime('now', '-15 minutes') THEN 1 ELSE 0 END) AS mine,
+         COUNT(*) AS hour
+       FROM messages WHERE created_at > datetime('now', '-1 hour')`,
+    )
+    .bind(hash)
+    .first();
+  if ((recent.mine || 0) >= PER_VISITOR || recent.hour >= PER_HOUR) {
+    throw new HttpError(429, 'Too many messages right now. Please try again a little later.');
+  }
+
+  await db
+    .prepare('INSERT INTO messages (name, email, message, ip_hash) VALUES (?, ?, ?, ?)')
+    .bind(name, email, message, hash)
+    .run();
+  return json({ ok: true }, 201);
+});

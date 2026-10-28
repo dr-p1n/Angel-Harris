@@ -187,6 +187,26 @@ h1, h2, h3, p { margin: 0; }
 .cta a { display: inline-block; margin-top: 24px; padding: 12px 26px; border-radius: 999px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 500; transition: opacity .2s; }
 .cta a:hover { opacity: .88; }
 
+/* ---------- Contact form ---------- */
+.contact-body { padding: 0 var(--gutter) 96px; max-width: calc(40rem + 2 * var(--gutter)); }
+.contact-form { display: grid; gap: 22px; }
+.cf-field { display: grid; gap: 8px; }
+.cf-field > span { font-size: .8125rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cf-field input, .cf-field textarea {
+  width: 100%; padding: 14px 16px; border: 1px solid var(--rule); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--text); font: inherit; font-size: 1.0625rem;
+}
+.cf-field textarea { min-height: 180px; resize: vertical; }
+.cf-field input:focus, .cf-field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.cf-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.cf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.btn-send { padding: 13px 30px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 500; font-size: 1rem; transition: opacity .2s; }
+.btn-send:hover { opacity: .88; }
+.btn-send:disabled { opacity: .55; cursor: default; }
+.form-status { color: var(--accent); font-size: .9375rem; }
+.contact-thanks h2 { font: 400 clamp(2rem, 5vw, 3rem)/1.1 var(--font-display); font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.02em; margin-bottom: 12px; }
+.contact-thanks p { color: var(--muted); font-size: 1.125rem; }
+
 /* ---------- Info drawer ---------- */
 dialog.info { margin: 0 0 0 auto; padding: 0; border: 0; border-left: 1px solid var(--rule); height: 100vh; height: 100dvh; max-height: none; max-width: 100%; width: min(480px, 100%); background: var(--bg); color: var(--text); }
 dialog.info[open] { animation: drawer .35s cubic-bezier(.2,.7,.2,1); }

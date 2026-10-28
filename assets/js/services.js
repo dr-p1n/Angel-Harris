@@ -5,7 +5,6 @@ const app = document.getElementById('app');
 try {
   const [site, { services }] = await Promise.all([api('/api/site'), api('/api/services')]);
   mountChrome(site, 'services');
-  const { email } = site.settings;
 
   const rows = services.map((s, i) =>
     h(
@@ -29,7 +28,7 @@ try {
       'section',
       { class: 'cta' },
       h('h2', null, 'Have a project in mind?'),
-      email ? h('a', { href: `mailto:${email}` }, 'Get in touch') : null,
+      h('a', { href: '/contact' }, 'Get in touch'),
     ),
   );
 } catch (e) {

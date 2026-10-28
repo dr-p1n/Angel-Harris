@@ -8,16 +8,16 @@ No framework, no build step, no npm dependencies.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `services.html`, `project.html` | Public pages (home grid + hero, services, case study) |
+| `index.html`, `services.html`, `project.html`, `contact.html` | Public pages (home grid + hero, services, case study, contact form) |
 | `assets/` | Shared CSS and JS, placeholder artwork |
 | `admin/` | Admin portal (projects, services, settings), served at `/admin/` |
 | `functions/` | Cloudflare Pages Functions: public API, admin API, image serving, `/work/:slug` |
-| `migrations/` | D1 schema (`0001_init.sql`) |
+| `migrations/` | D1 schema (`0001_init.sql`, `0002_messages.sql`) |
 | `seed/sample.sql` | **Sample content for local review only** |
 | `_headers`, `robots.txt` | Security headers and (pre-launch) crawler blocking |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
-Public routes: `/`, `/work/<slug>`, `/services`. Admin: `/admin/`.
+Public routes: `/`, `/work/<slug>`, `/services`, `/contact`. Admin: `/admin/`.
 
 ## Run it locally
 
@@ -39,7 +39,8 @@ Cloudflare dashboard. Do it for **both Production and Preview** environments
 if you want the branch preview to work.
 
 1. **D1 database.** Workers & Pages → D1 → Create database (e.g. `angel-harris-db`).
-   Open it → Console → paste and run `migrations/0001_init.sql`.
+   Open it → Console → paste and run each file in `migrations/` in order
+   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`).
    (Optional, preview only: also run `seed/sample.sql` to see sample content.)
 2. **R2 bucket.** R2 → Create bucket (e.g. `angel-harris-media`). Keep it private;
    images are served through the site at `/media/...`.
@@ -65,6 +66,18 @@ Policies → "Allow admins" → add the person's email to the Include rule. No c
 
 The admin API also verifies the Access token itself, so it stays closed even if
 the Access policy is misconfigured, and it refuses to run if steps 4-5 are missing.
+
+## Contact form
+
+Visitors send a message from `/contact`. Messages are saved in the database and read in
+**Admin → Messages** (unread count on the tab, reply by email, mark read, delete).
+
+- Spam protection: a hidden honeypot field, a minimum-time check, at most 2 links per message,
+  3 messages per visitor per 15 minutes and 60 per hour site-wide. Visitors are identified only by
+  a salted hash of their IP address, used for rate limiting.
+- Email notifications are **not enabled yet**: nobody is emailed when a message arrives, so check
+  the Messages tab. Delivery to Angel's inbox needs Cloudflare Email Routing/Sending set up on the
+  domain first.
 
 ## Security notes
 

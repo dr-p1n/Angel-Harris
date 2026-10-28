@@ -324,6 +324,58 @@ async function servicesView(main) {
   );
 }
 
+/* ---------------- Messages (contact form inbox) ---------------- */
+
+const formatWhen = (sqlTime) => {
+  const d = new Date(`${sqlTime.replace(' ', 'T')}Z`);
+  return Number.isNaN(d.getTime()) ? sqlTime : d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+};
+
+async function messagesView(main) {
+  const { messages, unread } = await api('/messages');
+  setUnread(unread);
+  const list = h('ol', { class: 'rows msgs' });
+
+  for (const m of messages) {
+    const item = h('li', { class: `panel msg${m.is_read ? '' : ' is-unread'}` });
+    const readBtn = h('button', { type: 'button', class: 'btn btn--sm' });
+    const draw = () => {
+      readBtn.textContent = m.is_read ? 'Mark unread' : 'Mark read';
+      item.classList.toggle('is-unread', !m.is_read);
+    };
+    readBtn.addEventListener('click', attempt(async () => {
+      await api(`/messages/${m.id}`, { method: 'PATCH', body: { is_read: !m.is_read } });
+      m.is_read = !m.is_read;
+      draw();
+      setUnread(messages.filter((x) => !x.is_read).length);
+    }));
+    const subject = encodeURIComponent(`Re: your message on angelharrisportfolio.com`);
+    item.append(
+      h('div', { class: 'msg__head' },
+        h('div', null, h('strong', null, m.name), ' ', h('a', { href: `mailto:${m.email}?subject=${subject}` }, m.email)),
+        h('span', { class: 'hint' }, formatWhen(m.created_at))),
+      h('p', { class: 'msg__body' }, m.message),
+      h('div', { class: 'actions msg__actions' },
+        h('a', { class: 'btn btn--sm btn--primary', href: `mailto:${m.email}?subject=${subject}` }, 'Reply by email'),
+        readBtn,
+        h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: attempt(async () => {
+          if (!confirm(`Delete the message from ${m.name}? This cannot be undone.`)) return;
+          await api(`/messages/${m.id}`, { method: 'DELETE' });
+          toast('Deleted');
+          await render();
+        }) }, 'Delete')),
+    );
+    draw();
+    list.append(item);
+  }
+
+  main.append(
+    h('div', { class: 'head' }, h('h1', null, 'Messages')),
+    messages.length ? h('p', { class: 'hint' }, 'Sent from the Contact page on the site. Newest first.') : h('p', { class: 'hint' }, 'No messages yet. They will appear here when visitors use the Contact form.'),
+    list,
+  );
+}
+
 /* ---------------- Settings ---------------- */
 
 async function settingsView(main) {
@@ -382,17 +434,24 @@ async function settingsView(main) {
 let me = '';
 const main = h('main', { class: 'main' });
 const tabs = h('nav', { class: 'tabs', 'aria-label': 'Admin sections' },
-  ...[['projects', 'Projects'], ['services', 'Services'], ['settings', 'Settings']].map(([k, label]) => h('a', { href: `#/${k}`, dataset: { tab: k } }, label)));
+  ...[['projects', 'Projects'], ['services', 'Services'], ['messages', 'Messages'], ['settings', 'Settings']].map(([k, label]) => h('a', { href: `#/${k}`, dataset: { tab: k } }, label)));
+
+// Shows the unread count next to the Messages tab.
+function setUnread(n) {
+  const a = tabs.querySelector('[data-tab="messages"]');
+  if (a) a.textContent = n > 0 ? `Messages (${n})` : 'Messages';
+}
 
 async function render() {
   const [section, arg] = location.hash.replace(/^#\/?/, '').split('/');
-  const tab = ['projects', 'services', 'settings'].includes(section) ? section : 'projects';
+  const tab = ['projects', 'services', 'messages', 'settings'].includes(section) ? section : 'projects';
   tabs.querySelectorAll('a').forEach((a) => (a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   clear(main);
   try {
     if (tab === 'projects' && arg) await projectEditor(main, arg === 'new' ? null : Number(arg));
     else if (tab === 'projects') await projectsView(main);
     else if (tab === 'services') await servicesView(main);
+    else if (tab === 'messages') await messagesView(main);
     else await settingsView(main);
   } catch (e) {
     clear(main).append(h('p', { class: 'state', role: 'alert' }, e.message));
@@ -408,6 +467,7 @@ try {
       main),
   );
   addEventListener('hashchange', render);
+  api('/messages').then((d) => setUnread(d.unread)).catch(() => {});
   await render();
 } catch (e) {
   clear(root).append(h('p', { class: 'state', role: 'alert' }, e.message));

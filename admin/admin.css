@@ -83,3 +83,10 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: all .25s; padding: 12px 20px; border-radius: 10px; background: var(--text); color: var(--bg); font-weight: 500; max-width: calc(100% - 32px); z-index: 50; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.error { background: #c0392b; color: #fff; }
+
+.msgs .msg { gap: 10px; }
+.msg.is-unread { border-left: 4px solid var(--accent); }
+.msg__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
+.msg__head a { color: var(--accent); }
+.msg__body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg__actions { margin-top: 4px; }

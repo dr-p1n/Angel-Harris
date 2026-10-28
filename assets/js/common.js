@@ -32,6 +32,7 @@ export function mountChrome(site, active) {
       { class: 'site-nav', 'aria-label': 'Main' },
       link('/#work', 'Work', 'work'),
       link('/services', 'Services', 'services'),
+      link('/contact', 'Contact', 'contact'),
       h('button', { type: 'button', class: 'nav-btn', onclick: () => info.showModal() }, 'Info'),
     ),
   );
@@ -74,9 +75,7 @@ function buildInfo(site) {
       h('h2', { id: 'info-title', class: 'info__title' }, 'Info'),
       h('div', { class: 'info__about' }, settings.about ? paragraphs(settings.about) : h('p', null, settings.tagline)),
       settings.location ? h('p', { class: 'info__row' }, h('span', null, 'Based in'), settings.location) : null,
-      settings.email
-        ? h('p', { class: 'info__row' }, h('span', null, 'Contact'), h('a', { href: `mailto:${settings.email}` }, settings.email))
-        : null,
+      h('p', { class: 'info__row' }, h('span', null, 'Contact'), settings.email ? [h('a', { href: `mailto:${settings.email}` }, settings.email), ' · '] : null, h('a', { href: '/contact' }, 'Send a message')),
       socials.length
         ? h(
             'p',
