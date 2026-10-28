@@ -24,7 +24,7 @@ body.admin { font-size: .9375rem; }
 }
 .btn:hover { border-color: var(--muted); }
 .btn:disabled { opacity: .5; cursor: default; }
-.btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .btn--danger { color: #ff6b6b; }
 .btn--sm { min-height: 32px; padding: 4px 10px; font-size: .8125rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }

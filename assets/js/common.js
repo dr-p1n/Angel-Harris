@@ -44,8 +44,8 @@ export function mountChrome(site, active) {
     settings.email ? h('a', { href: `mailto:${settings.email}` }, settings.email) : null,
   );
 
-  // Animated colour-blob backdrop shared by every page (pure CSS motion).
-  const fx = h('div', { class: 'fx', 'aria-hidden': 'true' }, ['b1', 'b2', 'b3', 'b4'].map((c) => h('i', { class: c })));
+  // Slow colour wash shared by every page (pure CSS motion).
+  const fx = h('div', { class: 'fx', 'aria-hidden': 'true' }, ['b1', 'b2', 'b3'].map((c) => h('i', { class: c })));
 
   document.body.prepend(fx, header);
   document.body.append(footer, info);
