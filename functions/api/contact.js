@@ -12,7 +12,7 @@ async function visitorHash(request, env) {
   return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const onRequestPost = handle(async ({ request, env }) => {
+export const onRequestPost = handle(async ({ request, env, waitUntil }) => {
   const db = requireDb(env);
   const origin = request.headers.get('Origin');
   if (origin && origin !== new URL(request.url).origin) throw new HttpError(403, 'Cross-site request blocked');
@@ -48,5 +48,17 @@ export const onRequestPost = handle(async ({ request, env }) => {
     .prepare('INSERT INTO messages (name, email, message, ip_hash) VALUES (?, ?, ?, ?)')
     .bind(name, email, message, hash)
     .run();
+
+  // Email Angel through the mailer Worker (service binding). The message is already
+  // saved, so a failed or missing notification never affects the visitor.
+  if (env.MAILER) {
+    waitUntil(
+      env.MAILER.fetch('https://mailer/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      }).catch((e) => console.error('notify failed', e)),
+    );
+  }
   return json({ ok: true }, 201);
 });

@@ -1,0 +1,14 @@
+# Contact-form mailer Worker (separate from the Pages site).
+# Deploy from this folder:  npx wrangler deploy
+# Set the recipient once:   npx wrangler secret put NOTIFY_TO
+name = "angel-harris-mailer"
+main = "index.js"
+compatibility_date = "2026-03-01"
+workers_dev = false      # no public URL; reachable only through the Pages service binding
+preview_urls = false
+
+[vars]
+NOTIFY_FROM = "contact@angelharrisportfolio.com"
+
+[[send_email]]
+name = "EMAIL"

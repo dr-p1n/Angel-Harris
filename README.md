@@ -15,6 +15,7 @@ No framework, no build step, no npm dependencies.
 | `migrations/` | D1 schema (`0001_init.sql`, `0002_messages.sql`) |
 | `seed/sample.sql` | **Sample content for local review only** |
 | `_headers`, `robots.txt` | Security headers and (pre-launch) crawler blocking |
+| `mailer/` | Tiny separate Worker that emails Angel when a contact message arrives |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
 Public routes: `/`, `/work/<slug>`, `/services`, `/contact`. Admin: `/admin/`.
@@ -75,9 +76,18 @@ Visitors send a message from `/contact`. Messages are saved in the database and 
 - Spam protection: a hidden honeypot field, a minimum-time check, at most 2 links per message,
   3 messages per visitor per 15 minutes and 60 per hour site-wide. Visitors are identified only by
   a salted hash of their IP address, used for rate limiting.
-- Email notifications are **not enabled yet**: nobody is emailed when a message arrives, so check
-  the Messages tab. Delivery to Angel's inbox needs Cloudflare Email Routing/Sending set up on the
-  domain first.
+- Email notifications: after saving, `/api/contact` calls the `angel-harris-mailer` Worker (service
+  binding `MAILER`), which emails Angel with the visitor as Reply-To. The recipient lives only in the
+  Worker's `NOTIFY_TO` secret, never in the repo. If the email fails, the message is still in the inbox.
+
+### Email setup (already done once; here for reference)
+1. Email Routing enabled on the domain (adds MX/SPF/DKIM records).
+2. The recipient is added as a destination address and must click Cloudflare's verification email.
+3. `cd mailer && npx wrangler deploy`, then `npx wrangler secret put NOTIFY_TO`.
+4. Pages project → bindings → Service binding `MAILER` → `angel-harris-mailer`.
+
+To change who gets the emails: add the new address as an Email Routing destination, verify it, then
+`cd mailer && npx wrangler secret put NOTIFY_TO`.
 
 ## Security notes
 
