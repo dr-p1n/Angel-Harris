@@ -79,7 +79,7 @@ try {
   const [site, { projects }] = await Promise.all([api('/api/site'), api('/api/projects')]);
   mountChrome(site, 'projects');
   clear(app).append(
-    h('section', { class: 'page-head' }, h('h1', null, 'Projects'), h('p', null, 'Shorts, games and 3D prints.')),
+    h('section', { class: 'page-head' }, h('h1', null, 'Projects'), h('p', null, 'Digital animation and 3D prints.')),
     buildWork(projects, site),
   );
 } catch (e) {

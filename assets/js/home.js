@@ -4,7 +4,7 @@ const app = document.getElementById('app');
 
 const FALLBACK_TAGLINE = 'Animation, games and small printed things.';
 const FALLBACK_BIO =
-  'Placeholder bio. Angel Harris is a digital animator who makes shorts and games, and prints small things in 3D on the side. A few honest sentences about the work, the tools and what drives it will go here.';
+  'Placeholder bio. Angel Harris is a digital animator who makes animated shorts and games, and prints small things in 3D on the side. A few honest sentences about the work, the tools and what drives it will go here.';
 
 // The showreel is the whole point of the page: an embedded Vimeo/YouTube video, or a framed placeholder until one is set.
 function buildReel(embed) {

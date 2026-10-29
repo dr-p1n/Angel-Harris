@@ -23,7 +23,7 @@ CREATE INDEX idx_quotes_created ON quotes(created_at);
 
 -- Only replace the placeholder defaults from 0001; anything Angel has edited stays.
 UPDATE settings
-   SET value = '[{"slug":"shorts","label":"Shorts"},{"slug":"games","label":"Games"},{"slug":"prints","label":"3D prints"}]'
+   SET value = '[{"slug":"animation","label":"Digital animation"},{"slug":"prints","label":"3D prints"}]'
  WHERE key = 'categories'
    AND value = '[{"slug":"brand","label":"Brand"},{"slug":"development","label":"Development"},{"slug":"design","label":"Design"}]';
 UPDATE settings SET value = 'Animation, games and small printed things.' WHERE key = 'tagline' AND value = 'Brand, development and design.';

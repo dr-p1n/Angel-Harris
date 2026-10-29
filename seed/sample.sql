@@ -92,13 +92,13 @@ INSERT INTO tasks (title, notes, priority, status, due_date, recurrence, project
  ('Update portfolio with new case study', '', 'low', 'todo', '', 'none', NULL),
  ('Renew domain name', '', 'normal', 'done', date('now', '-20 days'), 'yearly', NULL);
 
--- Match the site's real structure: shorts, games and 3D prints (catalogue categories, placeholder titles).
-UPDATE settings SET value = '[{"slug":"shorts","label":"Shorts"},{"slug":"games","label":"Games"},{"slug":"prints","label":"3D prints"}]' WHERE key = 'categories';
+-- Match the site's real structure: digital animation and 3D prints (shorts and games are tags).
+UPDATE settings SET value = '[{"slug":"animation","label":"Digital animation"},{"slug":"prints","label":"3D prints"}]' WHERE key = 'categories';
 UPDATE settings SET value = 'Animation, games and small printed things.' WHERE key = 'tagline';
-UPDATE projects SET slug = 'the-lighthouse-keeper', title = 'The Lighthouse Keeper', category = 'shorts', summary = 'A short about a lighthouse keeper and a very small robot.', client = '', role = 'Director, animator', tags = 'Blender,2D/3D' WHERE id = 1;
-UPDATE projects SET slug = 'pixel-harbor', title = 'Pixel Harbor', category = 'games', summary = 'A cosy harbour-town game with hand-animated characters.', client = '', role = 'Art and animation', tags = 'Unity,Aseprite' WHERE id = 2;
-UPDATE projects SET slug = 'ember', title = 'Ember', category = 'shorts', summary = 'A two-minute short about the last campfire.', client = '', role = 'Director, animator', tags = 'Blender,Compositing' WHERE id = 3;
-UPDATE projects SET slug = 'moth-lantern', title = 'Moth Lantern', category = 'games', summary = 'A small puzzle game about light, moths and patience.', client = '', role = 'Art and animation', tags = 'Godot,Spine' WHERE id = 4;
+UPDATE projects SET slug = 'the-lighthouse-keeper', title = 'The Lighthouse Keeper', category = 'animation', summary = 'A short about a lighthouse keeper and a very small robot.', client = '', role = 'Director, animator', tags = 'Short,Blender' WHERE id = 1;
+UPDATE projects SET slug = 'pixel-harbor', title = 'Pixel Harbor', category = 'animation', summary = 'A cosy harbour-town game with hand-animated characters.', client = '', role = 'Art and animation', tags = 'Game,Unity' WHERE id = 2;
+UPDATE projects SET slug = 'ember', title = 'Ember', category = 'animation', summary = 'A two-minute short about the last campfire.', client = '', role = 'Director, animator', tags = 'Short,Blender' WHERE id = 3;
+UPDATE projects SET slug = 'moth-lantern', title = 'Moth Lantern', category = 'animation', summary = 'A small puzzle game about light, moths and patience.', client = '', role = 'Art and animation', tags = 'Game,Godot' WHERE id = 4;
 UPDATE projects SET slug = 'articulated-dragon', title = 'Articulated Dragon', category = 'prints', summary = 'A print-in-place dragon, 0.2 mm layers, PLA.', client = '', role = 'Modelled and printed', tags = 'PLA,0.2 mm,Print-in-place' WHERE id = 5;
 UPDATE projects SET slug = 'chess-set', title = 'Chess Set', category = 'prints', summary = 'A full chess set with sculpted pieces, resin.', client = '', role = 'Modelled and printed', tags = 'Resin,Miniature' WHERE id = 6;
 UPDATE projects SET category = '' WHERE id IN (7, 8);

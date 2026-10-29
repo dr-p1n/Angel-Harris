@@ -44,7 +44,6 @@ export async function projectsView(main) {
             tracking ? h('div', { class: 'row__progress' }, progressBar(p.progress_effective), h('span', { class: 'hint' }, `${p.progress_effective}%`)) : null),
           h('div', { class: 'row__ctl' },
             check('On site', p.published, (v) => toggle(p.id, { published: v })),
-            check('Featured', p.featured, (v) => toggle(p.id, { featured: v })),
             h('a', { class: 'btn btn--sm', href: `#/projects/${p.id}` }, 'Open'))),
       );
     }
@@ -357,20 +356,18 @@ export async function projectEditor(main, id, { render }) {
 
   const portfolioPanel = h('div', { class: 'section', id: 'sec-portfolio', hidden: '' },
     h('p', { class: 'hint' }, 'The public page for this project. Tick “On the site” when it is ready to show.'),
-    h('div', { class: 'grid2' }, field('URL slug', slugInput), field('Category', catSelect)),
+    h('div', { class: 'grid2' }, field('URL slug', slugInput), field('Type', catSelect)),
     field('Short summary (shown on the project page and in link previews)', bind('summary', { maxlength: 400 })),
     field('Description (blank line = new paragraph)', bind('body', { maxlength: 8000 }, 'textarea')),
     h('div', { class: 'grid2' }, field('Year', bind('year', { maxlength: 10 })), field('Role', bind('role', { maxlength: 120 }))),
-    field('Tags (comma separated)', bind('tags', { maxlength: 200 })),
+    field('Tags (comma separated, e.g. Short, Game, Blender, PLA)', bind('tags', { maxlength: 200 })),
     h('div', { class: 'panel' },
       h('strong', null, 'Media'),
       h('p', { class: 'hint' }, 'JPEG, PNG, WebP or AVIF, up to 10 MB each. Resize large images first for fast loading.'),
       mediaList,
       h('div', { class: 'add-media' }, h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, 'Upload images'), fileInput, uploadStatus),
       h('div', { class: 'add-media' }, embedInput, h('button', { type: 'button', class: 'btn', onclick: addEmbed }, 'Add video'))),
-    h('div', { class: 'grid2' },
-      check('On the site (visible in the public portfolio)', p.published, (v) => (p.published = v)),
-      check('Featured (shown in the home hero)', p.featured, (v) => (p.featured = v))),
+    check('On the site (visible in the public portfolio)', p.published, (v) => (p.published = v)),
   );
 
   const tabBtns = {};

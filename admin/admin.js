@@ -154,7 +154,7 @@ async function settingsView(main) {
         field('Behance link', bindK('behance', { type: 'url', placeholder: 'https://…' })),
         field('LinkedIn link', bindK('linkedin', { type: 'url', placeholder: 'https://…' }))),
       h('fieldset', { class: 'panel' },
-        h('legend', null, 'Project categories (filters on the Projects page)'),
+        h('legend', null, 'Project types (the filters on the Projects page; Digital animation and 3D prints)'),
         catBox,
         h('div', { class: 'add-media' }, h('button', { type: 'button', class: 'btn btn--sm', onclick: () => { cats.push({ slug: '', label: '' }); renderCats(); catBox.querySelector('.cat:last-child input').focus(); } }, 'Add category')),
         h('p', { class: 'hint' }, 'Renaming a category keeps its projects. Removing one leaves its projects visible under “All”.')),
