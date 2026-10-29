@@ -1,0 +1,15 @@
+# LOCAL DEVELOPMENT ONLY. Not read by Cloudflare Pages (production bindings are
+# set in the dashboard). Used as: npx wrangler <cmd> --config dev/wrangler.toml
+name = "angel-harris-dev"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = ".."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "angel-harris-local"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "../migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "angel-harris-media-local"
