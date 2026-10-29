@@ -14,7 +14,7 @@ body.admin { font-size: .9375rem; }
 .who a { color: var(--accent); }
 .main { width: 100%; max-width: 960px; margin: 0 auto; padding: 32px var(--gutter) 96px; }
 .head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
-.head h1 { font-family: var(--font-display); font-weight: 400; font-size: 2.5rem; line-height: 1; }
+.head h1 { font-family: var(--font-display); font-weight: 700; font-size: 2.5rem; line-height: 1; }
 .hint { color: var(--muted); font-size: .875rem; }
 
 .btn {
@@ -96,7 +96,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .main--wide { max-width: 1240px; }
 .divider { border: 0; border-top: 1px solid var(--rule); margin: 40px 0 28px; }
 .head--sub { margin-bottom: 16px; align-items: flex-start; }
-.head--sub h2 { font: 400 1.75rem/1.1 var(--font-display); }
+.head--sub h2 { font: 700 1.75rem/1.1 var(--font-display); }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .fchip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--rule); font-size: .875rem; font-weight: 500; color: var(--muted); background: transparent; }
 .fchip:hover { color: var(--text); border-color: var(--muted); }
@@ -173,7 +173,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 dialog.dlg { width: min(580px, 94vw); max-height: 92vh; border: 1px solid var(--rule); border-radius: 14px; background: var(--bg); color: var(--text); padding: 22px; }
 dialog.dlg::backdrop { background: rgb(19 35 63 / .55); }
-.dlg h2 { font: 400 1.75rem/1.1 var(--font-display); margin: 0 0 4px; }
+.dlg h2 { font: 700 1.75rem/1.1 var(--font-display); margin: 0 0 4px; }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .ms-row input[type="checkbox"] { width: 18px; height: 18px; }
 
