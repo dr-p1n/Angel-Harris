@@ -1,6 +1,8 @@
 // Shared row -> API shaping and settings helpers.
 
-export const PUBLIC_SETTINGS = ['tagline', 'about', 'location', 'email', 'instagram', 'behance', 'linkedin'];
+export const PAGE_TEXT = ['eyebrow', 'services_intro', 'offer_animation', 'offer_prints', 'quote_intro'];
+
+export const PUBLIC_SETTINGS = ['tagline', 'about', 'location', 'email', 'instagram', 'behance', 'linkedin', ...PAGE_TEXT];
 
 export const splitList = (s, sep) => String(s || '').split(sep).map((x) => x.trim()).filter(Boolean);
 

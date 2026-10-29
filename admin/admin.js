@@ -106,6 +106,36 @@ async function mountServices(box) {
   );
 }
 
+/* ---------------- Storage: uploaded images no project uses any more ---------------- */
+
+const mb = (bytes) => `${(bytes / 1048576).toFixed(1)} MB`;
+
+async function mountStorage(box) {
+  let info;
+  try {
+    info = await api('/media');
+  } catch (e) {
+    clear(box).append(h('p', { class: 'hint' }, `Storage: ${e.message}`));
+    return;
+  }
+  const clean = attempt(async () => {
+    if (!confirm(`Delete ${info.unused.length} unused image${info.unused.length === 1 ? '' : 's'} (${mb(info.unused_bytes)}) for good? This cannot be undone.`)) return;
+    const done = await api('/media', { method: 'DELETE' });
+    toast(`Deleted ${done.deleted} image${done.deleted === 1 ? '' : 's'}`);
+    await mountStorage(box);
+  });
+  clear(box).append(
+    h('div', { class: 'head head--sub' },
+      h('div', null,
+        h('h2', null, 'Storage'),
+        h('p', { class: 'hint' }, `${info.total} uploaded image${info.total === 1 ? '' : 's'} (${mb(info.bytes)}). `,
+          info.unused.length
+            ? `${info.unused.length} not used by any project (${mb(info.unused_bytes)}). Images uploaded in the last day are never listed.`
+            : 'Every image is in use.')),
+      info.unused.length ? h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: clean }, 'Delete unused images') : null),
+  );
+}
+
 /* ---------------- Settings ---------------- */
 
 async function settingsView(main) {
@@ -140,12 +170,22 @@ async function settingsView(main) {
 
   const servicesBox = h('section', { class: 'settings-services' });
 
+  const storageBox = h('section', { class: 'settings-storage' });
+
   main.append(
     h('div', { class: 'head' }, h('h1', null, 'Settings')),
     h('form', { class: 'form', onsubmit: (e) => { e.preventDefault(); save(); } },
       field('Home page headline', bindK('tagline', { maxlength: 160 })),
       field('Short bio (shown on the Home page under the headline; blank line = new paragraph)', bindK('about', { maxlength: 5000 }, 'textarea')),
       field('Showreel link (Vimeo or YouTube, shown on the Home page)', bindK('showreel', { type: 'url', placeholder: 'https://vimeo.com/…', maxlength: 300 })),
+      h('fieldset', { class: 'panel' },
+        h('legend', null, 'Page text'),
+        h('p', { class: 'hint fieldset-note' }, 'Wording on the public pages. Leave a box empty to use the standard text.'),
+        field('Line above the Home headline', bindK('eyebrow', { maxlength: 120, placeholder: 'Angel Harris · Digital animator' })),
+        field('Services page intro', bindK('services_intro', { maxlength: 300 }, 'textarea')),
+        field('Services: Digital animation card', bindK('offer_animation', { maxlength: 400 }, 'textarea')),
+        field('Services: 3D printing card', bindK('offer_prints', { maxlength: 400 }, 'textarea')),
+        field('Get a quote: 3D print intro', bindK('quote_intro', { maxlength: 400 }, 'textarea'))),
       h('div', { class: 'grid2' },
         field('Location', bindK('location', { maxlength: 120 })),
         field('Public contact email (optional; the Contact form works without it)', bindK('email', { type: 'email', maxlength: 200 }))),
@@ -161,21 +201,27 @@ async function settingsView(main) {
       h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'btn btn--primary' }, 'Save settings'))),
     h('hr', { class: 'divider' }),
     servicesBox,
+    h('hr', { class: 'divider' }),
+    storageBox,
   );
   await mountServices(servicesBox);
+  await mountStorage(storageBox);
 }
 
 /* ---------------- Shell and routing ---------------- */
 
-const TABS = [['projects', 'Projects'], ['prints', '3D Prints'], ['operations', 'Operations'], ['messages', 'Messages'], ['settings', 'Settings']];
+const TABS = [['projects', 'Projects'], ['prints', 'Quotes'], ['operations', 'Operations'], ['messages', 'Messages'], ['settings', 'Settings']];
 const main = h('main', { class: 'main' });
 const tabs = h('nav', { class: 'tabs', 'aria-label': 'Admin sections' },
   ...TABS.map(([k, label]) => h('a', { href: `#/${k}`, dataset: { tab: k } }, label)));
 
-// Shows how many quote requests are still new next to the 3D Prints tab.
-function setOpenQuotes(n) {
+// Shows how many print quotes and animation enquiries are still new next to the Quotes tab.
+const openCount = { quotes: 0, enquiries: 0 };
+function setOpenQuotes(kind, n) {
+  openCount[kind] = n;
+  const total = openCount.quotes + openCount.enquiries;
   const a = tabs.querySelector('[data-tab="prints"]');
-  if (a) a.textContent = n > 0 ? `3D Prints (${n})` : '3D Prints';
+  if (a) a.textContent = total > 0 ? `Quotes (${total})` : 'Quotes';
 }
 
 // Shows the unread count next to the Messages tab.
@@ -214,7 +260,8 @@ try {
   );
   addEventListener('hashchange', render);
   api('/messages').then((d) => setUnread(d.unread)).catch(() => {});
-  api('/quotes').then((d) => setOpenQuotes(d.open)).catch(() => {});
+  api('/quotes').then((d) => setOpenQuotes('quotes', d.open)).catch(() => {});
+  api('/enquiries').then((d) => setOpenQuotes('enquiries', d.open)).catch(() => {});
   await render();
 } catch (e) {
   clear(root).append(h('p', { class: 'state', role: 'alert' }, e.message));

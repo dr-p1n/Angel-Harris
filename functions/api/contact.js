@@ -1,16 +1,9 @@
 import { HttpError, handle, json, readJson, requireDb } from '../_lib/http.js';
-import { str } from '../_lib/util.js';
+import { str, visitorHash } from '../_lib/util.js';
 
 const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
 const PER_VISITOR = 3; // messages per 15 minutes
 const PER_HOUR = 60; // site-wide ceiling, protects the inbox from floods
-
-async function visitorHash(request, env) {
-  const ip = request.headers.get('CF-Connecting-IP') || '';
-  const data = new TextEncoder().encode(`${env.CONTACT_SALT || 'angel-harris'}:${ip}`);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 export const onRequestPost = handle(async ({ request, env, waitUntil }) => {
   const db = requireDb(env);

@@ -1,18 +1,11 @@
 import { HttpError, handle, json, readJson, requireDb } from '../_lib/http.js';
-import { httpUrlOrEmpty, str } from '../_lib/util.js';
+import { httpUrlOrEmpty, str, visitorHash } from '../_lib/util.js';
 import { newQuoteRef, readPricing } from '../_lib/prints.js';
 import { estimate } from '../../assets/js/pricing.js';
 
 const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
 const PER_VISITOR = 4; // requests per 15 minutes
 const PER_HOUR = 60; // site-wide ceiling
-
-async function visitorHash(request, env) {
-  const ip = request.headers.get('CF-Connecting-IP') || '';
-  const data = new TextEncoder().encode(`${env.CONTACT_SALT || 'angel-harris'}:${ip}`);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 // A visitor asks for a print quote. The price is recomputed here from the stored price list,
 // whatever the browser claims, and the request is saved under a random quote number.

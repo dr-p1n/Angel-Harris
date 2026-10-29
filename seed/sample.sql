@@ -10,6 +10,7 @@ DELETE FROM project_media;
 DELETE FROM projects;
 DELETE FROM services;
 DELETE FROM messages;
+DELETE FROM enquiries;
 
 INSERT INTO projects (id, slug, title, category, summary, body, year, client, role, tags, cover_url, featured, published, position) VALUES
  (1, 'northlight-identity', 'Northlight Identity', 'brand', 'A warm, modular identity system for a coastal coffee roaster.', 'Placeholder case study.
@@ -96,3 +97,6 @@ UPDATE projects SET slug = 'moth-lantern', title = 'Moth Lantern', category = 'a
 UPDATE projects SET slug = 'articulated-dragon', title = 'Articulated Dragon', category = 'prints', summary = 'A print-in-place dragon, 0.2 mm layers, PLA.', client = '', role = 'Modelled and printed', tags = 'PLA,0.2 mm,Print-in-place' WHERE id = 5;
 UPDATE projects SET slug = 'chess-set', title = 'Chess Set', category = 'prints', summary = 'A full chess set with sculpted pieces, resin.', client = '', role = 'Modelled and printed', tags = 'Resin,Miniature' WHERE id = 6;
 UPDATE projects SET category = '' WHERE id IN (7, 8);
+
+INSERT INTO enquiries (ref, name, email, project_type, scope, deadline, budget, link, notes) VALUES
+ ('AH-DEMO42', 'Sample Studio', 'sample@example.com', 'Short film', '45 seconds, 2 characters', 'End of next month', 'Around 1,500', 'https://example.com/moodboard', 'A sample enquiry for local review: a warm, hand-lit short about a robot learning to garden.');

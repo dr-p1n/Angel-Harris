@@ -76,6 +76,22 @@ export async function projectsView(main) {
 
 /* ---------------- Project editor ---------------- */
 
+// Lets image files be dropped onto a box. Reordering uses a different drag (no files), so the two never clash.
+function dropZone(box, onFiles) {
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+  box.addEventListener('dragover', (e) => { if (hasFiles(e)) { e.preventDefault(); box.classList.add('is-drop'); } });
+  box.addEventListener('dragleave', (e) => { if (!box.contains(e.relatedTarget)) box.classList.remove('is-drop'); });
+  box.addEventListener('drop', attempt(async (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    box.classList.remove('is-drop');
+    const images = [...e.dataTransfer.files].filter((f) => f.type.startsWith('image/'));
+    if (!images.length) throw new Error('Drop image files (JPEG, PNG, WebP or AVIF)');
+    await onFiles(images);
+  }));
+  return box;
+}
+
 export async function projectEditor(main, id, { render }) {
   const [{ categories }, loaded, loadedWork] = await Promise.all([
     api('/settings'),
@@ -283,8 +299,7 @@ export async function projectEditor(main, id, { render }) {
 
   const fileInput = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp,image/avif', multiple: '', hidden: '' });
   const uploadStatus = h('span', { class: 'hint' });
-  fileInput.addEventListener('change', attempt(async () => {
-    const files = [...fileInput.files];
+  const uploadFiles = async (files) => {
     for (const [i, f] of files.entries()) {
       uploadStatus.textContent = `Uploading ${i + 1} of ${files.length}…`;
       const form = new FormData();
@@ -299,6 +314,9 @@ export async function projectEditor(main, id, { render }) {
       }
     }
     uploadStatus.textContent = '';
+  };
+  fileInput.addEventListener('change', attempt(async () => {
+    await uploadFiles([...fileInput.files]);
     fileInput.value = '';
   }));
   const embedInput = h('input', { type: 'url', class: 'cap', placeholder: 'Vimeo or YouTube link', 'aria-label': 'Video link' });
@@ -361,12 +379,12 @@ export async function projectEditor(main, id, { render }) {
     field('Description (blank line = new paragraph)', bind('body', { maxlength: 8000 }, 'textarea')),
     h('div', { class: 'grid2' }, field('Year', bind('year', { maxlength: 10 })), field('Role', bind('role', { maxlength: 120 }))),
     field('Tags (comma separated, e.g. Short, Game, Blender, PLA)', bind('tags', { maxlength: 200 })),
-    h('div', { class: 'panel' },
+    dropZone(h('div', { class: 'panel' },
       h('strong', null, 'Media'),
-      h('p', { class: 'hint' }, 'JPEG, PNG, WebP or AVIF, up to 10 MB each. Resize large images first for fast loading.'),
+      h('p', { class: 'hint' }, 'Drag images onto this box or use Upload. JPEG, PNG, WebP or AVIF, up to 10 MB each. Resize large images first for fast loading.'),
       mediaList,
       h('div', { class: 'add-media' }, h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, 'Upload images'), fileInput, uploadStatus),
-      h('div', { class: 'add-media' }, embedInput, h('button', { type: 'button', class: 'btn', onclick: addEmbed }, 'Add video'))),
+      h('div', { class: 'add-media' }, embedInput, h('button', { type: 'button', class: 'btn', onclick: addEmbed }, 'Add video'))), uploadFiles),
     check('On the site (visible in the public portfolio)', p.published, (v) => (p.published = v)),
   );
 

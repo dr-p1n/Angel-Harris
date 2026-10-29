@@ -199,6 +199,9 @@ h1, h2, h3, p { margin: 0; }
 .contact-thanks p { color: var(--muted); font-size: 1.125rem; }
 
 /* ---------- 3D print quote ---------- */
+.qt-pick { padding: 0 var(--gutter) 28px; }
+.qt-switch { display: flex; gap: 8px; flex-wrap: wrap; }
+.qt.qt--single { grid-template-columns: minmax(0, 1fr); }
 .qt-wrap { padding: 0 var(--gutter) 96px; max-width: 1240px; }
 .qt { display: grid; gap: 32px; align-items: start; }
 @media (min-width: 960px) { .qt { grid-template-columns: minmax(0, 1fr) 360px; gap: 56px; } .qt-card { position: sticky; top: calc(var(--header-h) + 24px); } }

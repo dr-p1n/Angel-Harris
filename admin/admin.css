@@ -191,3 +191,6 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .price-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) auto; gap: 12px; align-items: end; padding: 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); }
 .trial__out { margin: 0; font-weight: 700; font-size: 1.0625rem; }
 .msg__actions .field { display: flex; align-items: center; gap: 8px; }
+
+.is-drop { outline: 2px dashed var(--accent, #1c3158); outline-offset: 4px; }
+.fieldset-note { margin: 0 0 8px; }

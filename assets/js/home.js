@@ -37,7 +37,7 @@ try {
   clear(app).append(
     h('section', { class: 'home' },
       h('div', { class: 'home__copy' },
-        h('p', { class: 'stage__eyebrow' }, 'Angel Harris · Digital animator'),
+        h('p', { class: 'stage__eyebrow' }, settings.eyebrow || 'Angel Harris · Digital animator'),
         headline,
         h('div', { class: 'home__bio' }, settings.about ? paragraphs(settings.about) : h('p', null, FALLBACK_BIO))),
       buildReel(settings.showreel)),

@@ -2,25 +2,26 @@ import { h, clear } from '/assets/js/dom.js';
 import { DEFAULT_PRICING, cleanPricing, estimate } from '/assets/js/pricing.js';
 import { api, attempt, field, formatWhen, toast } from './lib.js';
 
-let sub = 'quotes'; // remembered while the admin stays open
+let sub = 'quotes'; // remembered while the admin stays open: quotes | enquiries | pricing
 const STATUS = [['new', 'New'], ['quoted', 'Quoted'], ['accepted', 'Accepted'], ['declined', 'Declined']];
 const safeLink = (u) => (/^https?:\/\/[^\s"'<>]+$/.test(u || '') ? u : null);
 
 export async function printsView(main, { setOpen }) {
   const body = h('div');
-  const chips = h('div', { class: 'filter-chips', role: 'group', 'aria-label': '3D prints sections' });
+  const chips = h('div', { class: 'filter-chips', role: 'group', 'aria-label': 'Quote sections' });
   const draw = async () => {
-    clear(chips).append(...[['quotes', 'Quote requests'], ['pricing', 'Pricing']].map(([k, label]) =>
+    clear(chips).append(...[['quotes', '3D print requests'], ['enquiries', 'Animation enquiries'], ['pricing', 'Print pricing']].map(([k, label]) =>
       h('button', { type: 'button', class: 'fchip', 'aria-pressed': String(sub === k), onclick: () => { sub = k; draw(); } }, label)));
     clear(body);
     try {
       if (sub === 'quotes') await quotesList(body, setOpen);
+      else if (sub === 'enquiries') await enquiriesList(body, setOpen);
       else await pricingEditor(body);
     } catch (e) {
       body.append(h('p', { class: 'state', role: 'alert' }, e.message));
     }
   };
-  main.append(h('div', { class: 'head' }, h('h1', null, '3D Prints')), chips, body);
+  main.append(h('div', { class: 'head' }, h('h1', null, 'Quotes')), chips, body);
   await draw();
 }
 
@@ -28,9 +29,9 @@ export async function printsView(main, { setOpen }) {
 
 async function quotesList(box, setOpen) {
   const { quotes, open } = await api('/quotes');
-  setOpen(open);
+  setOpen('quotes', open);
   if (!quotes.length) {
-    box.append(h('p', { class: 'hint' }, 'No quote requests yet. They appear here, and in your email, when visitors use the 3D Prints page.'));
+    box.append(h('p', { class: 'hint' }, 'No quote requests yet. They appear here, and in your email, when visitors use the Get a quote page.'));
     return;
   }
   const list = h('ol', { class: 'rows msgs' });
@@ -39,7 +40,7 @@ async function quotesList(box, setOpen) {
     const select = h('select', { class: 'cap cap--auto', 'aria-label': `Status of ${q.ref}`, onchange: attempt(async (e) => {
       await api(`/quotes/${q.id}`, { method: 'PATCH', body: { status: e.target.value } });
       q.status = e.target.value;
-      setOpen(quotes.filter((x) => x.status === 'new').length);
+      setOpen('quotes', quotes.filter((x) => x.status === 'new').length);
       toast('Status updated');
     }) }, STATUS.map(([v, l]) => h('option', { value: v, selected: v === q.status ? '' : null }, l)));
     const file = safeLink(q.file_url);
@@ -67,6 +68,51 @@ async function quotesList(box, setOpen) {
     );
   }
   box.append(h('p', { class: 'hint' }, 'Newest first. The estimate is what the visitor saw; send them the final price by email.'), list);
+}
+
+/* ---------------- Animation enquiries ---------------- */
+
+async function enquiriesList(box, setOpen) {
+  const { enquiries, open } = await api('/enquiries');
+  setOpen('enquiries', open);
+  if (!enquiries.length) {
+    box.append(h('p', { class: 'hint' }, 'No animation enquiries yet. They appear here, and in your email, when visitors choose Animation on the Get a quote page.'));
+    return;
+  }
+  const list = h('ol', { class: 'rows msgs' });
+  for (const q of enquiries) {
+    const subject = encodeURIComponent(`Your animation enquiry ${q.ref}`);
+    const select = h('select', { class: 'cap cap--auto', 'aria-label': `Status of ${q.ref}`, onchange: attempt(async (e) => {
+      await api(`/enquiries/${q.id}`, { method: 'PATCH', body: { status: e.target.value } });
+      q.status = e.target.value;
+      setOpen('enquiries', enquiries.filter((x) => x.status === 'new').length);
+      toast('Status updated');
+    }) }, STATUS.map(([v, l]) => h('option', { value: v, selected: v === q.status ? '' : null }, l)));
+    const link = safeLink(q.link);
+    list.append(
+      h('li', { class: `panel msg${q.status === 'new' ? ' is-unread' : ''}` },
+        h('div', { class: 'msg__head' },
+          h('div', null, h('strong', null, q.ref), ' · ', q.name, ' ', h('a', { href: `mailto:${q.email}?subject=${subject}` }, q.email)),
+          h('span', { class: 'hint' }, formatWhen(q.created_at))),
+        h('p', { class: 'msg__body' }, [
+          q.project_type,
+          [q.scope && `Scope: ${q.scope}`, q.deadline && `Deadline: ${q.deadline}`, q.budget && `Budget: ${q.budget}`].filter(Boolean).join(' · '),
+          `\n${q.notes}`,
+        ].filter(Boolean).join('\n')),
+        link ? h('p', { class: 'hint' }, 'Reference: ', h('a', { href: link, target: '_blank', rel: 'noopener noreferrer' }, link)) : null,
+        h('div', { class: 'actions msg__actions' },
+          h('a', { class: 'btn btn--sm btn--primary', href: `mailto:${q.email}?subject=${subject}` }, 'Reply by email'),
+          field('Status', select),
+          h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: attempt(async () => {
+            if (!confirm(`Delete enquiry ${q.ref} from ${q.name}? This cannot be undone.`)) return;
+            await api(`/enquiries/${q.id}`, { method: 'DELETE' });
+            toast('Deleted');
+            clear(box);
+            await enquiriesList(box, setOpen);
+          }) }, 'Delete'))),
+    );
+  }
+  box.append(h('p', { class: 'hint' }, 'Newest first. Reply with a plan and a price, then set the status.'), list);
 }
 
 /* ---------------- Pricing ---------------- */
@@ -121,7 +167,7 @@ async function pricingEditor(box, draft) {
   });
 
   box.append(
-    h('p', { class: 'hint' }, 'These numbers drive the instant estimate on the 3D Prints page. The starting values are placeholders: replace them with real prices before launch.'),
+    h('p', { class: 'hint' }, 'These numbers drive the instant estimate on the Get a quote page. The starting values are placeholders: replace them with real prices before launch.'),
     h('form', { class: 'form', onsubmit: (e) => { e.preventDefault(); save(); } },
       h('div', { class: 'panel' },
         h('strong', null, 'Basics'),

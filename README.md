@@ -10,15 +10,15 @@ No framework, no build step, no npm dependencies.
 |---|---|
 | `index.html`, `projects.html`, `prints.html`, `services.html`, `project.html`, `contact.html` | Public pages (Home, Projects catalogue, 3D Prints quote page, Services, case study, contact form). `client.html` is the client portal page, switched off. |
 | `assets/` | Shared CSS and JS, placeholder artwork |
-| `admin/` | Admin portal (Projects, 3D Prints, Operations, Messages, Settings), served at `/admin/` |
+| `admin/` | Admin portal (Projects, Quotes, Operations, Messages, Settings), served at `/admin/` |
 | `functions/` | Cloudflare Pages Functions: public API, admin API, image serving, `/work/:slug` |
-| `migrations/` | D1 schema (`0001_init.sql` to `0004_prints.sql`) |
+| `migrations/` | D1 schema (`0001_init.sql` to `0005_enquiries.sql`) |
 | `seed/sample.sql` | **Sample content for local review only** |
 | `_headers`, `robots.txt` | Security headers and (pre-launch) crawler blocking |
 | `mailer/` | Tiny separate Worker that emails Angel when a contact message arrives |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
-Main navigation: Projects (`/projects`), Services (digital animation and 3D printing, with links to start either), Get a quote (`/prints`). There is no Home tab: the logo links to `/`. Public routes: `/` (short bio + showreel only), `/projects` (catalogue: digital animation and 3D prints; shorts and games are tags), `/work/<slug>` (one project), `/prints` (3D print quote generator), `/services`, `/contact` (linked from the footer and the animation brief button). Admin: `/admin/`.
+Main navigation: Projects (`/projects`), Services (digital animation and 3D printing, with links to start either), Get a quote (`/prints`). There is no Home tab: the logo links to `/`. Public routes: `/` (short bio + showreel only), `/projects` (catalogue: digital animation and 3D prints; shorts and games are tags), `/work/<slug>` (one project), `/prints` (Get a quote: 3D print generator, or `/prints?for=animation` for the animation brief form), `/services`, `/contact` (linked from the footer and the animation brief button). Admin: `/admin/`.
 
 The client portal (`/client/<token>`) is built but **switched off**: the route and its API return 404 and the admin hides every client-link control. It turns on when the Pages environment variable `CLIENT_PORTAL` is set to `on` (see `functions/_lib/features.js`).
 
@@ -43,7 +43,7 @@ if you want the branch preview to work.
 
 1. **D1 database.** Workers & Pages → D1 → Create database (e.g. `angel-harris-db`).
    Open it → Console → paste and run each file in `migrations/` in order
-   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`, `0003_workspace.sql`, `0004_prints.sql`).
+   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`, `0003_workspace.sql`, `0004_prints.sql`, `0005_enquiries.sql`).
    (Optional, preview only: also run `seed/sample.sql` to see sample content.)
 2. **R2 bucket.** R2 → Create bucket (e.g. `angel-harris-media`). Keep it private;
    images are served through the site at `/media/...`.
@@ -78,8 +78,8 @@ the Access policy is misconfigured, and it refuses to run if steps 4-5 are missi
 - **Operations**: internal task board (urgent / high / normal / low), due dates, repeating tasks that
   reschedule when completed, a month calendar (tasks, milestones, project due dates), and a daily email
   digest at 13:00 UTC (empty days send nothing; "Email me the digest now" sends one on demand).
-- **3D Prints**: *Quote requests* from the public quote page (status: new / quoted / accepted / declined, reply by email, delete) and *Pricing* (the numbers behind the live estimate, with a "Try it" box). The tab shows how many requests are still new.
-- **Messages**: contact-form inbox. **Settings**: headline, short bio, showreel link, socials, project categories and the public Services page.
+- **Quotes**: *3D print requests* and *Animation enquiries* from the public Get a quote page (status: new / quoted / accepted / declined, reply by email, delete) and *Print pricing* (the numbers behind the live estimate, with a "Try it" box). The tab shows how many requests are still new.
+- **Messages**: contact-form inbox. **Settings**: headline, short bio, showreel link, **Page text** (the line above the headline, Services intro and cards, quote intro), socials, project categories, the public Services page, and **Storage** (lists uploaded images no project uses and deletes them on request; images from the last day are never touched). Project images can be dragged straight onto the Media box.
 
 ### Project colours
 
@@ -105,7 +105,7 @@ referrer. At launch also add `Disallow: /client/` to `robots.txt`.
 `/prints` is a quote generator in the style of the Verite catalogue: visitors set material, size, finish, quantity and rush, see a live price range, then send the request. Each request gets a random quote number (`AH-` plus six characters without O/0/I/1/L, never sequential), is saved in the `quotes` table and emailed to Angel through the same mailer Worker as contact messages.
 
 - **Pricing model** (`assets/js/pricing.js`, shared by the page and the server): volume = box size x "share of the box that is plastic"; per piece = material per cm³ + machine time + finish; then quantity discount, setup fee, rush multiplier and a minimum order. The page shows the total plus or minus the estimate range. The server recomputes every estimate from the stored price list, so the browser cannot choose its own price.
-- **Prices are placeholders** until Angel sets real ones in **Admin → 3D Prints → Pricing** (stored in `settings.print_pricing`).
+- **Prices are placeholders** until Angel sets real ones in **Admin → Quotes → Print pricing** (stored in `settings.print_pricing`).
 - Same spam protection as the contact form (honeypot, minimum time, rate limits by salted IP hash, at most 2 links in notes).
 - Visitors may add a link to their 3D file (no uploads). Without one, the email says Angel may need to model it.
 - The mailer accepts an optional `subject`. Until the Worker is redeployed (`cd mailer && npx wrangler deploy`) quote emails arrive with the generic "New message from …" subject; everything else works.

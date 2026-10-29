@@ -51,3 +51,11 @@ export const httpUrlOrEmpty = (v, field) => {
   if (s && !/^https?:\/\/[^\s"'<>]+$/.test(s)) throw new HttpError(400, `${field} must be a http(s) link`);
   return s;
 };
+
+// Visitors are identified only by a salted hash of their IP address, used for rate limiting.
+export async function visitorHash(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+  const data = new TextEncoder().encode(`${env.CONTACT_SALT || 'angel-harris'}:${ip}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, '0')).join('');
+}

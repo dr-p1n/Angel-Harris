@@ -1,5 +1,5 @@
 import { HttpError, handle, json, readJson, requireDb } from '../../_lib/http.js';
-import { readSettings } from '../../_lib/data.js';
+import { PAGE_TEXT, readSettings } from '../../_lib/data.js';
 import { httpUrlOrEmpty, normalizeEmbed, slugify, str } from '../../_lib/util.js';
 
 const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
@@ -26,6 +26,7 @@ export const onRequestPut = handle(async ({ request, env }) => {
     instagram: httpUrlOrEmpty(s.instagram, 'Instagram'),
     behance: httpUrlOrEmpty(s.behance, 'Behance'),
     linkedin: httpUrlOrEmpty(s.linkedin, 'LinkedIn'),
+    ...Object.fromEntries(PAGE_TEXT.map((k) => [k, str(s[k], 600, 'Page text')])),
   };
 
   const seen = new Set();
