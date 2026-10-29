@@ -1,7 +1,8 @@
 import { h, clear } from '/assets/js/dom.js';
-import { api, attempt, check, dragControls, field, formatWhen, makeSortable, moveButtons, toast } from './lib.js';
+import { api, attempt, check, dragControls, features, field, formatWhen, makeSortable, moveButtons, toast } from './lib.js';
 import { projectEditor, projectsView } from './projects.js';
 import { operationsView } from './ops.js';
+import { printsView } from './prints.js';
 
 const root = document.getElementById('admin');
 
@@ -142,8 +143,9 @@ async function settingsView(main) {
   main.append(
     h('div', { class: 'head' }, h('h1', null, 'Settings')),
     h('form', { class: 'form', onsubmit: (e) => { e.preventDefault(); save(); } },
-      field('Tagline (home page headline)', bindK('tagline', { maxlength: 160 })),
-      field('About (shown in the Info panel; blank line = new paragraph)', bindK('about', { maxlength: 5000 }, 'textarea')),
+      field('Home page headline', bindK('tagline', { maxlength: 160 })),
+      field('Short bio (shown on the Home page under the headline; blank line = new paragraph)', bindK('about', { maxlength: 5000 }, 'textarea')),
+      field('Showreel link (Vimeo or YouTube, shown on the Home page)', bindK('showreel', { type: 'url', placeholder: 'https://vimeo.com/…', maxlength: 300 })),
       h('div', { class: 'grid2' },
         field('Location', bindK('location', { maxlength: 120 })),
         field('Public contact email (optional; the Contact form works without it)', bindK('email', { type: 'email', maxlength: 200 }))),
@@ -152,7 +154,7 @@ async function settingsView(main) {
         field('Behance link', bindK('behance', { type: 'url', placeholder: 'https://…' })),
         field('LinkedIn link', bindK('linkedin', { type: 'url', placeholder: 'https://…' }))),
       h('fieldset', { class: 'panel' },
-        h('legend', null, 'Project categories (filters on the home page)'),
+        h('legend', null, 'Project categories (filters on the Projects page)'),
         catBox,
         h('div', { class: 'add-media' }, h('button', { type: 'button', class: 'btn btn--sm', onclick: () => { cats.push({ slug: '', label: '' }); renderCats(); catBox.querySelector('.cat:last-child input').focus(); } }, 'Add category')),
         h('p', { class: 'hint' }, 'Renaming a category keeps its projects. Removing one leaves its projects visible under “All”.')),
@@ -165,10 +167,16 @@ async function settingsView(main) {
 
 /* ---------------- Shell and routing ---------------- */
 
-const TABS = [['projects', 'Projects'], ['operations', 'Operations'], ['messages', 'Messages'], ['settings', 'Settings']];
+const TABS = [['projects', 'Projects'], ['prints', '3D Prints'], ['operations', 'Operations'], ['messages', 'Messages'], ['settings', 'Settings']];
 const main = h('main', { class: 'main' });
 const tabs = h('nav', { class: 'tabs', 'aria-label': 'Admin sections' },
   ...TABS.map(([k, label]) => h('a', { href: `#/${k}`, dataset: { tab: k } }, label)));
+
+// Shows how many quote requests are still new next to the 3D Prints tab.
+function setOpenQuotes(n) {
+  const a = tabs.querySelector('[data-tab="prints"]');
+  if (a) a.textContent = n > 0 ? `3D Prints (${n})` : '3D Prints';
+}
 
 // Shows the unread count next to the Messages tab.
 function setUnread(n) {
@@ -185,6 +193,7 @@ async function render() {
   try {
     if (tab === 'projects' && arg) await projectEditor(main, arg === 'new' ? null : Number(arg), { render });
     else if (tab === 'projects') await projectsView(main);
+    else if (tab === 'prints') await printsView(main, { setOpen: setOpenQuotes });
     else if (tab === 'operations') await operationsView(main);
     else if (tab === 'messages') await messagesView(main);
     else await settingsView(main);
@@ -195,7 +204,9 @@ async function render() {
 }
 
 try {
-  const me = (await api('/me')).email;
+  const meData = await api('/me');
+  const me = meData.email;
+  Object.assign(features, meData.features);
   clear(root).append(
     h('div', { class: 'shell' },
       h('header', { class: 'topbar' }, h('strong', null, 'Angel Harris · Admin'), tabs, h('div', { class: 'who' }, h('span', null, me), h('a', { href: '/', target: '_blank', rel: 'noopener' }, 'View site ↗'))),
@@ -203,6 +214,7 @@ try {
   );
   addEventListener('hashchange', render);
   api('/messages').then((d) => setUnread(d.unread)).catch(() => {});
+  api('/quotes').then((d) => setOpenQuotes(d.open)).catch(() => {});
   await render();
 } catch (e) {
   clear(root).append(h('p', { class: 'state', role: 'alert' }, e.message));

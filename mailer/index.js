@@ -33,12 +33,13 @@ async function notify(request, env) {
   const name = oneLine(data.name, 100);
   const email = oneLine(data.email, 200);
   const message = String(data.message || '').slice(0, 4000);
+  const subject = oneLine(data.subject, 150) || `New message from ${name}`;
   if (!name || !email || !message) return new Response('Bad request', { status: 400 });
 
   try {
     await send(env, {
       replyTo: { email, name },
-      subject: `New message from ${name}`,
+      subject,
       text: `${message}\n\n--\nFrom: ${name} <${email}>\nHit reply to answer them directly. All messages are also in the admin portal.`,
       html: `<p style="white-space:pre-wrap">${esc(message)}</p><hr><p><strong>${esc(name)}</strong> &lt;${esc(email)}&gt;<br>Hit reply to answer them directly. All messages are also in the admin portal.</p>`,
     });

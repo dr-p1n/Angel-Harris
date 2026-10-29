@@ -8,17 +8,19 @@ No framework, no build step, no npm dependencies.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `services.html`, `project.html`, `contact.html`, `client.html` | Public pages (home grid + hero, services, case study, contact form, private client progress page) |
+| `index.html`, `projects.html`, `prints.html`, `services.html`, `project.html`, `contact.html` | Public pages (Home, Projects catalogue, 3D Prints quote page, Services, case study, contact form). `client.html` is the client portal page, switched off. |
 | `assets/` | Shared CSS and JS, placeholder artwork |
-| `admin/` | Admin portal (projects, services, settings), served at `/admin/` |
+| `admin/` | Admin portal (Projects, 3D Prints, Operations, Messages, Settings), served at `/admin/` |
 | `functions/` | Cloudflare Pages Functions: public API, admin API, image serving, `/work/:slug` |
-| `migrations/` | D1 schema (`0001_init.sql`, `0002_messages.sql`, `0003_workspace.sql`) |
+| `migrations/` | D1 schema (`0001_init.sql` to `0004_prints.sql`) |
 | `seed/sample.sql` | **Sample content for local review only** |
 | `_headers`, `robots.txt` | Security headers and (pre-launch) crawler blocking |
 | `mailer/` | Tiny separate Worker that emails Angel when a contact message arrives |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
-Public routes: `/`, `/work/<slug>`, `/services`, `/contact`. Private: `/client/<token>` (per-project client link). Admin: `/admin/`.
+Public routes: `/` (short bio + showreel only), `/projects` (catalogue: shorts, games, 3D prints), `/work/<slug>` (one project), `/prints` (3D print quote generator), `/services`, `/contact`. Admin: `/admin/`.
+
+The client portal (`/client/<token>`) is built but **switched off**: the route and its API return 404 and the admin hides every client-link control. It turns on when the Pages environment variable `CLIENT_PORTAL` is set to `on` (see `functions/_lib/features.js`).
 
 ## Run it locally
 
@@ -41,7 +43,7 @@ if you want the branch preview to work.
 
 1. **D1 database.** Workers & Pages → D1 → Create database (e.g. `angel-harris-db`).
    Open it → Console → paste and run each file in `migrations/` in order
-   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`, `0003_workspace.sql`).
+   (or from a terminal: `npx wrangler d1 execute angel-harris-db --remote --file=migrations/0001_init.sql`, then `0002_messages.sql`, `0003_workspace.sql`, `0004_prints.sql`).
    (Optional, preview only: also run `seed/sample.sql` to see sample content.)
 2. **R2 bucket.** R2 → Create bucket (e.g. `angel-harris-media`). Keep it private;
    images are served through the site at `/media/...`.
@@ -76,7 +78,8 @@ the Access policy is misconfigured, and it refuses to run if steps 4-5 are missi
 - **Operations**: internal task board (urgent / high / normal / low), due dates, repeating tasks that
   reschedule when completed, a month calendar (tasks, milestones, project due dates), and a daily email
   digest at 13:00 UTC (empty days send nothing; "Email me the digest now" sends one on demand).
-- **Messages**: contact-form inbox. **Settings**: site text and the public Services page.
+- **3D Prints**: *Quote requests* from the public quote page (status: new / quoted / accepted / declined, reply by email, delete) and *Pricing* (the numbers behind the live estimate, with a "Try it" box). The tab shows how many requests are still new.
+- **Messages**: contact-form inbox. **Settings**: headline, short bio, showreel link, socials, project categories and the public Services page.
 
 ### Project colours
 
@@ -91,11 +94,21 @@ The theme is offwhite backgrounds with navy text and mint highlights (tokens at 
 
 On-hold projects stay neutral. Clients never see these colours on their link.
 
-### Client links
-A project's client link (`/client/<32-hex token>`) is read-only and shows only items marked "Client sees"
+### Client links (switched off)
+When `CLIENT_PORTAL=on`, a project's client link (`/client/<32-hex token>`) is read-only and shows only items marked "Client sees"
 (progress, milestones, deliverables, updates). Anyone with the link can view it, so treat it like a password.
 Replace the link to invalidate the old one, or turn it off. The pages are never cached or indexed and send no
 referrer. At launch also add `Disallow: /client/` to `robots.txt`.
+
+## 3D print quotes
+
+`/prints` is a quote generator in the style of the Verite catalogue: visitors set material, size, finish, quantity and rush, see a live price range, then send the request. Each request gets a random quote number (`AH-` plus six characters without O/0/I/1/L, never sequential), is saved in the `quotes` table and emailed to Angel through the same mailer Worker as contact messages.
+
+- **Pricing model** (`assets/js/pricing.js`, shared by the page and the server): volume = box size x "share of the box that is plastic"; per piece = material per cm³ + machine time + finish; then quantity discount, setup fee, rush multiplier and a minimum order. The page shows the total plus or minus the estimate range. The server recomputes every estimate from the stored price list, so the browser cannot choose its own price.
+- **Prices are placeholders** until Angel sets real ones in **Admin → 3D Prints → Pricing** (stored in `settings.print_pricing`).
+- Same spam protection as the contact form (honeypot, minimum time, rate limits by salted IP hash, at most 2 links in notes).
+- Visitors may add a link to their 3D file (no uploads). Without one, the email says Angel may need to model it.
+- The mailer accepts an optional `subject`. Until the Worker is redeployed (`cd mailer && npx wrangler deploy`) quote emails arrive with the generic "New message from …" subject; everything else works.
 
 ## Contact form
 
@@ -129,7 +142,7 @@ To change who gets the emails: add the new address as an Email Routing destinati
 
 ## Launch checklist
 
-- [ ] Replace the placeholder projects/services with Angel's real work (admin → Projects, Services); set the bio, email and links under Settings.
+- [ ] Replace the placeholder projects/services with Angel's real work (admin → Projects, Settings → Services); set the bio, showreel link, email and links under Settings; set real prices under 3D Prints → Pricing.
 - [ ] Remove the sample content if it was loaded (`seed/sample.sql`).
 - [ ] Go public to search engines: replace `robots.txt` with `Allow: /` + `Disallow: /admin/`, and delete the `X-Robots-Tag` line in `_headers`.
 - [ ] Merge. The maintenance page PR (`maintenance-landing`) also adds `index.html`, `_headers` and `robots.txt`; if it is merged first, resolve the conflict by keeping this branch's versions.

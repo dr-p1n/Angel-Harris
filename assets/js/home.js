@@ -1,158 +1,47 @@
-import { api, catLabel, clear, h, mountChrome, showError } from './common.js';
+import { api, clear, h, mountChrome, paragraphs, showError } from './common.js';
 
 const app = document.getElementById('app');
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const cover = (p, attrs) => h('img', { src: p.cover_url, alt: '', decoding: 'async', ...attrs });
+const FALLBACK_TAGLINE = 'Animation, games and small printed things.';
+const FALLBACK_BIO =
+  'Placeholder bio. Angel Harris is a digital animator who makes shorts and games, and prints small things in 3D on the side. A few honest sentences about the work, the tools and what drives it will go here.';
 
-// Featured-project carousel (the "showcase" card).
-function buildShowcase(items, site) {
-  const slides = items.map((p, i) =>
-    h(
-      'a',
-      { class: 'hero__slide', href: `/work/${p.slug}`, 'aria-label': `${p.title}, view project` },
-      cover(p, i === 0 ? { fetchpriority: 'high' } : { loading: 'lazy' }),
-      h(
-        'div',
-        { class: 'hero__cap' },
-        h('p', { class: 'hero__kicker' }, [catLabel(site, p.category), p.year].filter(Boolean).join(' · ')),
-        h('h2', { class: 'hero__title' }, p.title),
-        h('span', { class: 'hero__cta' }, 'View project →'),
-      ),
-    ),
-  );
-
-  const count = h('span', { class: 'hero__count' });
-  const root = h('div', { class: 'showcase', 'aria-roledescription': 'carousel', 'aria-label': 'Featured work' }, slides);
-
-  let idx = 0;
-  let timer = null;
-  const show = (n) => {
-    idx = (n + items.length) % items.length;
-    slides.forEach((s, i) => {
-      s.classList.toggle('is-active', i === idx);
-      s.inert = i !== idx;
-    });
-    count.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(items.length).padStart(2, '0')}`;
-  };
-  const stop = () => clearInterval(timer);
-  const start = () => {
-    stop();
-    if (items.length > 1 && !reduceMotion) timer = setInterval(() => show(idx + 1), 6500);
-  };
-
-  if (items.length > 1) {
-    const btn = (label, glyph, delta) =>
-      h('button', { type: 'button', class: 'hero__btn', 'aria-label': label, onclick: () => { show(idx + delta); start(); } }, glyph);
-    root.append(h('div', { class: 'hero__ctl' }, count, h('div', { class: 'hero__btns' }, btn('Previous project', '←', -1), btn('Next project', '→', 1))));
-    root.addEventListener('mouseenter', stop);
-    root.addEventListener('mouseleave', start);
-    root.addEventListener('focusin', stop);
-    root.addEventListener('focusout', start);
-    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+// The showreel is the whole point of the page: an embedded Vimeo/YouTube video, or a framed placeholder until one is set.
+function buildReel(embed) {
+  if (embed) {
+    return h('div', { class: 'reel' },
+      h('iframe', {
+        src: embed,
+        title: 'Showreel',
+        allow: 'fullscreen; picture-in-picture; encrypted-media',
+        allowfullscreen: '',
+        loading: 'lazy',
+        referrerpolicy: 'strict-origin-when-cross-origin',
+      }));
   }
-  show(0);
-  start();
-  return root;
-}
-
-// Large headline built from the editable tagline (second word set in italic), plus the featured carousel.
-function buildStage(items, site) {
-  const tagline = site.settings.tagline || 'Brand, development and design.';
-  const words = tagline.split(/\s+/);
-  const headline = h('h1', { class: 'headline' });
-  words.forEach((word, i) => headline.append(words.length > 2 && i === 1 ? h('em', null, word) : word, ' '));
-
-  const copy = h(
-    'div',
-    { class: 'stage__copy' },
-    h('p', { class: 'stage__eyebrow' }, 'Angel Harris · Portfolio'),
-    headline,
-    items.length ? h('a', { class: 'stage__cta', href: '#work' }, 'See the work ↓') : null,
-  );
-
-  const stage = h('section', { class: `stage${items.length ? '' : ' stage--empty'}`, 'aria-label': 'Introduction' }, copy);
-  if (items.length) stage.append(h('div', { class: 'stage__card' }, buildShowcase(items, site)));
-  return stage;
-}
-
-function buildWork(projects, site) {
-  const used = site.categories.filter((c) => projects.some((p) => p.category === c.slug));
-
-  const cards = projects.map((p) =>
-    h(
-      'a',
-      { class: 'card', href: `/work/${p.slug}`, dataset: { cat: p.category } },
-      cover(p, { loading: 'lazy' }),
-      h(
-        'div',
-        { class: 'card__meta' },
-        h('p', { class: 'card__kicker' }, [catLabel(site, p.category), p.year].filter(Boolean).join(' · ')),
-        h('h3', { class: 'card__title' }, p.title),
-      ),
-    ),
-  );
-
-  const grid = h('div', { class: 'grid', id: 'grid' }, cards);
-  const section = h('section', { class: 'work', id: 'work', 'aria-label': 'Work' });
-  if (!projects.length) {
-    section.append(h('p', { class: 'state' }, 'New work is on its way.'));
-    return section;
-  }
-
-  // Cards ease in as they scroll into view (skipped for reduced motion / no observer).
-  if ('IntersectionObserver' in window && !reduceMotion) {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          e.target.classList.add('in');
-          io.unobserve(e.target);
-        }
-      }
-    }, { rootMargin: '0px 0px -8% 0px' });
-    cards.forEach((c, i) => {
-      c.classList.add('reveal');
-      c.style.transitionDelay = `${(i % 3) * 70}ms`;
-      io.observe(c);
-    });
-  }
-
-  const chips = [{ slug: '', label: 'All', n: projects.length }, ...used.map((c) => ({ ...c, n: projects.filter((p) => p.category === c.slug).length }))].map(
-    (c) => h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', dataset: { cat: c.slug } }, c.label, h('small', null, c.n)),
-  );
-  const bar = h('div', { class: 'filters', role: 'group', 'aria-label': 'Filter work by category' }, used.length ? chips : []);
-
-  const apply = (slug, animate) => {
-    const run = () => {
-      cards.forEach((c, i) => (c.hidden = !!slug && projects[i].category !== slug));
-      chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.cat === slug)));
-    };
-    // Transitions only run (and call back) while the page is rendering.
-    if (animate && document.startViewTransition && !reduceMotion && document.visibilityState === 'visible') {
-      const t = document.startViewTransition(run);
-      for (const p of [t.ready, t.finished, t.updateCallbackDone]) p.catch(() => {});
-    } else {
-      run();
-    }
-    const url = new URL(location.href);
-    slug ? url.searchParams.set('c', slug) : url.searchParams.delete('c');
-    history.replaceState(null, '', url);
-  };
-  chips.forEach((c) => c.addEventListener('click', () => apply(c.dataset.cat, true)));
-
-  const initial = new URLSearchParams(location.search).get('c') || '';
-  section.append(...(used.length ? [bar] : []), grid);
-  apply(used.some((c) => c.slug === initial) ? initial : '');
-  return section;
+  return h('div', { class: 'reel reel--empty', role: 'img', 'aria-label': 'Showreel placeholder' },
+    h('span', { class: 'reel__play', 'aria-hidden': 'true' }, h('i')),
+    h('p', { class: 'reel__label' }, 'Showreel placeholder'),
+    h('small', null, 'Angel’s reel goes here'));
 }
 
 try {
-  const [site, { projects }] = await Promise.all([api('/api/site'), api('/api/projects')]);
+  const site = await api('/api/site');
   mountChrome(site, 'home');
-  const featured = projects.filter((p) => p.featured && p.cover_url);
-  const heroItems = (featured.length ? featured : projects.filter((p) => p.cover_url)).slice(0, 5);
-  clear(app).append(buildStage(heroItems, site), buildWork(projects, site));
-  if (location.hash === '#work') document.getElementById('work')?.scrollIntoView();
+  const { settings } = site;
+
+  const words = (settings.tagline || FALLBACK_TAGLINE).split(/\s+/);
+  const headline = h('h1', { class: 'headline' });
+  words.forEach((word, i) => headline.append(words.length > 2 && i === 1 ? h('em', null, word) : word, ' '));
+
+  clear(app).append(
+    h('section', { class: 'home' },
+      h('div', { class: 'home__copy' },
+        h('p', { class: 'stage__eyebrow' }, 'Angel Harris · Digital animator'),
+        headline,
+        h('div', { class: 'home__bio' }, settings.about ? paragraphs(settings.about) : h('p', null, FALLBACK_BIO))),
+      buildReel(settings.showreel)),
+  );
 } catch (e) {
   showError(app, e.message);
 }

@@ -1,5 +1,5 @@
 import { h, clear } from '/assets/js/dom.js';
-import { STATUS_LABEL, api, attempt, check, dragControls, field, formatWhen, makeSortable, moveButtons, prettyDate, slugify, text, toast } from './lib.js';
+import { STATUS_LABEL, features, api, attempt, check, dragControls, field, formatWhen, makeSortable, moveButtons, prettyDate, slugify, text, toast } from './lib.js';
 
 let filter = 'all'; // remembered while the admin stays open
 
@@ -39,7 +39,7 @@ export async function projectsView(main) {
           p.cover_url ? h('img', { class: 'row__thumb', src: p.cover_url, alt: '' }) : h('div', { class: 'row__thumb' }),
           h('div', null,
             h('div', { class: 'row__title' }, p.title, ' ', h('span', { class: `pill pill--${p.status}` }, STATUS_LABEL[p.status] || p.status)),
-            h('div', { class: 'row__sub' }, [p.client, p.due_date ? `Due ${prettyDate(p.due_date)}` : '', p.published ? `/work/${p.slug}` : 'Not on the site', p.has_share ? 'Client link on' : ''].filter(Boolean).join(' · ')),
+            h('div', { class: 'row__sub' }, [p.client, p.due_date ? `Due ${prettyDate(p.due_date)}` : '', p.published ? `/work/${p.slug}` : 'Not on the site', p.has_share && features.clientPortal ? 'Client link on' : ''].filter(Boolean).join(' · ')),
             tracking ? h('div', { class: 'row__sub' }, healthTag(p.health)) : null,
             tracking ? h('div', { class: 'row__progress' }, progressBar(p.progress_effective), h('span', { class: 'hint' }, `${p.progress_effective}%`)) : null),
           h('div', { class: 'row__ctl' },
@@ -68,7 +68,7 @@ export async function projectsView(main) {
 
   main.append(
     h('div', { class: 'head' }, h('h1', null, 'Projects'), h('a', { class: 'btn btn--primary', href: '#/projects/new' }, 'New project')),
-    h('p', { class: 'hint' }, 'Track client work here (status, milestones, deliverables, updates, a private client link). “On site” puts a finished piece in the public portfolio; drag to set the order in “All”.'),
+    h('p', { class: 'hint' }, 'Track client work here (status, milestones, deliverables, updates). “On site” puts a finished piece in the public portfolio; drag to set the order in “All”.'),
     chipBar,
     h('div', { class: 'legend hint', 'aria-label': 'Colour key' }, HEALTH_LEVELS.map(([level, text_]) => h('span', { class: `health health--${level}` }, text_))),
     listBox,
@@ -140,7 +140,7 @@ export async function projectEditor(main, id, { render }) {
           h('input', { type: 'checkbox', checked: m.done ? '' : null, 'aria-label': 'Done', onchange: (e) => { m.done = e.target.checked; drawProgress(); } }),
           h('input', { class: 'cap', type: 'text', value: m.title, placeholder: 'Milestone', maxlength: 120, 'aria-label': 'Milestone', oninput: (e) => (m.title = e.target.value) }),
           h('input', { class: 'cap', type: 'date', value: m.due_date || '', 'aria-label': 'Due date', oninput: (e) => (m.due_date = e.target.value) }),
-          check('Client sees', m.client_visible, (v) => (m.client_visible = v)),
+          features.clientPortal ? check('Client sees', m.client_visible, (v) => (m.client_visible = v)) : null,
           h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: () => { milestones = milestones.filter((x) => x !== m); drawMilestones(); drawProgress(); } }, 'Remove')),
       );
     }
@@ -167,7 +167,7 @@ export async function projectEditor(main, id, { render }) {
             h('div', { class: 'mitem__ctl' },
               h('select', { class: 'cap cap--auto', 'aria-label': 'Status', onchange: (e) => (d.status = e.target.value) },
                 [['pending', 'Pending'], ['delivered', 'Delivered'], ['approved', 'Approved']].map(([v, l]) => h('option', { value: v, selected: v === d.status ? '' : null }, l))),
-              check('Client sees', d.client_visible, (v) => (d.client_visible = v)),
+              features.clientPortal ? check('Client sees', d.client_visible, (v) => (d.client_visible = v)) : null,
               h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: () => { deliverables = deliverables.filter((x) => x !== d); drawDeliverables(); } }, 'Remove')))),
       );
     }
@@ -224,13 +224,13 @@ export async function projectEditor(main, id, { render }) {
     for (const u of updates) {
       updList.append(
         h('li', { class: 'upd' },
-          h('div', { class: 'msg__head' }, h('span', { class: 'hint' }, formatWhen(u.created_at)), h('span', { class: `pill ${u.client_visible ? 'pill--ongoing' : ''}` }, u.client_visible ? 'Client sees' : 'Internal')),
+          h('div', { class: 'msg__head' }, h('span', { class: 'hint' }, formatWhen(u.created_at)), features.clientPortal ? h('span', { class: `pill ${u.client_visible ? 'pill--ongoing' : ''}` }, u.client_visible ? 'Client sees' : 'Internal') : null),
           h('p', { class: 'msg__body' }, u.body),
           h('div', { class: 'actions msg__actions' },
-            h('button', { type: 'button', class: 'btn btn--sm', onclick: attempt(async () => {
+            features.clientPortal ? h('button', { type: 'button', class: 'btn btn--sm', onclick: attempt(async () => {
               await api(`/updates/${u.id}`, { method: 'PATCH', body: { client_visible: !u.client_visible } });
               u.client_visible = !u.client_visible; drawUpdates();
-            }) }, u.client_visible ? 'Make internal' : 'Show to client'),
+            }) }, u.client_visible ? 'Make internal' : 'Show to client') : null,
             h('button', { type: 'button', class: 'btn btn--sm btn--danger', onclick: attempt(async () => {
               if (!confirm('Delete this update?')) return;
               await api(`/updates/${u.id}`, { method: 'DELETE' }); updates = updates.filter((x) => x !== u); drawUpdates();
@@ -243,7 +243,7 @@ export async function projectEditor(main, id, { render }) {
         h('strong', null, 'Updates'),
         newUpdate,
         h('div', { class: 'add-media' },
-          check('Visible to client', false, (v) => (updVisible = v)),
+          features.clientPortal ? check('Visible to client', false, (v) => (updVisible = v)) : null,
           h('button', { type: 'button', class: 'btn btn--sm btn--primary', onclick: attempt(async () => {
             const body = newUpdate.value.trim();
             if (!body) { toast('Write something first', true); return; }
@@ -351,7 +351,7 @@ export async function projectEditor(main, id, { render }) {
       h('strong', null, 'Deliverables'),
       dlList,
       h('div', { class: 'add-media' }, h('button', { type: 'button', class: 'btn btn--sm', onclick: () => { deliverables.push({ _k: ++seq, title: '', description: '', url: '', status: 'pending', client_visible: true }); drawDeliverables(); dlList.querySelector('li:last-child .cap')?.focus(); } }, 'Add deliverable'))),
-    h('div', { class: 'panel' }, h('strong', null, 'Client link'), shareBox),
+    features.clientPortal ? h('div', { class: 'panel' }, h('strong', null, 'Client link'), shareBox) : null,
     updateBox,
   );
 

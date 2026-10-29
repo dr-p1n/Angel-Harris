@@ -1,9 +1,12 @@
 // Serves the client progress page shell at /client/:token. The page itself is rendered
 // client-side from /api/client/:token. Responses are never cached or indexed, and send no
 // Referer, so the private link can't leak through links on the page.
+import { clientPortalOn } from '../_lib/features.js';
+
 const TOKEN_RE = /^[a-f0-9]{32}$/;
 
 export const onRequestGet = async ({ request, env, params }) => {
+  if (!clientPortalOn(env)) return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
   const shell = await env.ASSETS.fetch(new URL('/client', request.url));
 
   let known = false;

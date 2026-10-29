@@ -105,3 +105,6 @@ export const localISO = (d = new Date()) => `${d.getFullYear()}-${String(d.getMo
 export const prettyDate = (iso) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 export const STATUS_LABEL = { ongoing: 'Ongoing', on_hold: 'On hold', completed: 'Completed' };
+
+// Switches reported by the server (see functions/_lib/features.js). Filled in by admin.js at start-up.
+export const features = { clientPortal: false };

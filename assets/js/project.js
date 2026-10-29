@@ -29,7 +29,7 @@ function render(site, { project: p, media, prev, next }) {
     'section',
     { class: 'p-hero' },
     p.cover_url ? h('img', { src: p.cover_url, alt: '', fetchpriority: 'high' }) : null,
-    h('a', { class: 'p-back', href: '/#work' }, '← All work'),
+    h('a', { class: 'p-back', href: '/projects' }, '← All projects'),
     h('div', { class: 'p-hero__cap' }, h('h1', { class: 'p-title' }, p.title)),
   );
 
@@ -48,7 +48,7 @@ function render(site, { project: p, media, prev, next }) {
     prev && next
       ? h('nav', { class: 'pager', 'aria-label': 'More projects' }, pagerLink(prev, '← Previous', 'prev'), pagerLink(next, 'Next →', 'next'))
       : null;
-  const all = h('p', { class: 'pager-all' }, h('a', { href: '/#work' }, 'Back to all work'));
+  const all = h('p', { class: 'pager-all' }, h('a', { href: '/projects' }, 'Back to all projects'));
 
   clear(app).append(hero, body, pager, all);
 
@@ -56,7 +56,7 @@ function render(site, { project: p, media, prev, next }) {
     if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea|select/i.test(e.target.tagName) || document.querySelector('dialog[open]')) return;
     if (e.key === 'ArrowLeft' && prev) location.href = `/work/${prev.slug}`;
     if (e.key === 'ArrowRight' && next) location.href = `/work/${next.slug}`;
-    if (e.key === 'Escape') location.href = '/#work';
+    if (e.key === 'Escape') location.href = '/projects';
   });
 }
 
@@ -68,7 +68,7 @@ try {
 } catch (e) {
   if (e.status === 404) {
     document.title = 'Not found | Angel Harris';
-    clear(app).append(h('div', { class: 'state' }, h('p', null, 'That project could not be found.'), h('p', null, h('a', { href: '/#work' }, 'Back to all work'))));
+    clear(app).append(h('div', { class: 'state' }, h('p', null, 'That project could not be found.'), h('p', null, h('a', { href: '/projects' }, 'Back to all projects'))));
   } else {
     showError(app, e.message);
   }

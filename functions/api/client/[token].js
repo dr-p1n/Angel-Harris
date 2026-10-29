@@ -1,4 +1,5 @@
 import { HttpError, handle, json, requireDb } from '../../_lib/http.js';
+import { clientPortalOn } from '../../_lib/features.js';
 
 const TOKEN_RE = /^[a-f0-9]{32}$/;
 const PRIVATE = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer' };
@@ -6,6 +7,7 @@ const PRIVATE = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollo
 // Read-only view of one project for its client. Knowing the link is the only credential,
 // so unknown and malformed tokens get the same 404, and internal items are never returned.
 export const onRequestGet = handle(async ({ env, params }) => {
+  if (!clientPortalOn(env)) throw new HttpError(404, 'Not found');
   const db = requireDb(env);
   const token = String(params.token || '');
   const project = TOKEN_RE.test(token)
