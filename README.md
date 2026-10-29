@@ -78,6 +78,19 @@ the Access policy is misconfigured, and it refuses to run if steps 4-5 are missi
   digest at 13:00 UTC (empty days send nothing; "Email me the digest now" sends one on demand).
 - **Messages**: contact-form inbox. **Settings**: site text and the public Services page.
 
+### Project colours
+
+The theme is offwhite backgrounds with navy text and mint highlights (tokens at the top of `assets/css/site.css`). Active projects in the admin carry a schedule colour, worked out on the server (`projectHealth` in `functions/_lib/data.js`) from the due date, progress and overdue milestones:
+
+| Colour | Meaning |
+| --- | --- |
+| Green | On track: no date, or more than 14 days away. Completed projects are green too. |
+| Yellow | Due within 14 days. |
+| Orange | Slipping: a milestone is overdue, or due within 7 days with under 75% done. |
+| Red | The due date has passed. |
+
+On-hold projects stay neutral. Clients never see these colours on their link.
+
 ### Client links
 A project's client link (`/client/<32-hex token>`) is read-only and shows only items marked "Client sees"
 (progress, milestones, deliverables, updates). Anyone with the link can view it, so treat it like a password.

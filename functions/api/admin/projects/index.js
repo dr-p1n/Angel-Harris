@@ -7,7 +7,8 @@ export const onRequestGet = handle(async ({ env }) => {
     .prepare(
       `SELECT p.*,
          (SELECT COUNT(*) FROM milestones WHERE project_id = p.id) AS ms_total,
-         (SELECT COUNT(*) FROM milestones WHERE project_id = p.id AND done = 1) AS ms_done
+         (SELECT COUNT(*) FROM milestones WHERE project_id = p.id AND done = 1) AS ms_done,
+         (SELECT COUNT(*) FROM milestones WHERE project_id = p.id AND done = 0 AND due_date != '' AND due_date < date('now')) AS ms_late
        FROM projects p ORDER BY p.position, p.id`,
     )
     .all();

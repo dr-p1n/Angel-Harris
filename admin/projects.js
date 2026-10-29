@@ -3,6 +3,9 @@ import { STATUS_LABEL, api, attempt, check, dragControls, field, formatWhen, mak
 
 let filter = 'all'; // remembered while the admin stays open
 
+const HEALTH_LEVELS = [['green', 'On track'], ['yellow', 'Due within 2 weeks'], ['orange', 'Slipping'], ['red', 'Overdue']];
+const healthTag = (health) => (health ? h('span', { class: `health health--${health.level}` }, health.label) : null);
+
 const progressBar = (pct) => {
   const bar = h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': pct }, h('i'));
   bar.firstChild.style.setProperty('--p', `${pct}%`);
@@ -31,12 +34,13 @@ export async function projectsView(main) {
     for (const p of shown) {
       const tracking = p.status !== 'completed';
       list.append(
-        h('li', { class: `row${reorderable ? '' : ' row--plain'}`, dataset: { key: p.id } },
+        h('li', { class: `row${reorderable ? '' : ' row--plain'}${tracking && HEALTH_LEVELS.some(([l]) => l === p.health?.level) ? ` has-health health--${p.health.level}` : ''}`, dataset: { key: p.id } },
           reorderable ? h('div', null, dragControls(), moveButtons()) : h('div'),
           p.cover_url ? h('img', { class: 'row__thumb', src: p.cover_url, alt: '' }) : h('div', { class: 'row__thumb' }),
           h('div', null,
             h('div', { class: 'row__title' }, p.title, ' ', h('span', { class: `pill pill--${p.status}` }, STATUS_LABEL[p.status] || p.status)),
             h('div', { class: 'row__sub' }, [p.client, p.due_date ? `Due ${prettyDate(p.due_date)}` : '', p.published ? `/work/${p.slug}` : 'Not on the site', p.has_share ? 'Client link on' : ''].filter(Boolean).join(' · ')),
+            tracking ? h('div', { class: 'row__sub' }, healthTag(p.health)) : null,
             tracking ? h('div', { class: 'row__progress' }, progressBar(p.progress_effective), h('span', { class: 'hint' }, `${p.progress_effective}%`)) : null),
           h('div', { class: 'row__ctl' },
             check('On site', p.published, (v) => toggle(p.id, { published: v })),
@@ -66,6 +70,7 @@ export async function projectsView(main) {
     h('div', { class: 'head' }, h('h1', null, 'Projects'), h('a', { class: 'btn btn--primary', href: '#/projects/new' }, 'New project')),
     h('p', { class: 'hint' }, 'Track client work here (status, milestones, deliverables, updates, a private client link). “On site” puts a finished piece in the public portfolio; drag to set the order in “All”.'),
     chipBar,
+    h('div', { class: 'legend hint', 'aria-label': 'Colour key' }, HEALTH_LEVELS.map(([level, text_]) => h('span', { class: `health health--${level}` }, text_))),
     listBox,
   );
 }
@@ -335,6 +340,7 @@ export async function projectEditor(main, id, { render }) {
   const trackingPanel = h('div', { class: 'section', id: 'sec-tracking' },
     h('div', { class: 'panel' },
       h('strong', null, 'Progress'),
+      id && p.status !== 'completed' ? h('div', { class: 'hint' }, 'Schedule: ', healthTag(p.health), ' (as last saved)') : null,
       progressBox,
       field('Manual progress (%), used only when there are no milestones', manualProgress)),
     h('div', { class: 'panel' },
