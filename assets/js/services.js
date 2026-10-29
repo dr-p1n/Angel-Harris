@@ -22,13 +22,31 @@ try {
   );
 
   clear(app).append(
-    h('section', { class: 'page-head' }, h('h1', null, 'Services'), h('p', null, 'What I can help you make.')),
+    h('section', { class: 'page-head' }, h('h1', null, 'Services'), h('p', null, 'Two things I make: digital animation and 3D prints. Here is what each involves and how to get started.')),
+    h(
+      'section',
+      { class: 'offer' },
+      h(
+        'article',
+        { class: 'offer__card' },
+        h('h2', null, 'Digital animation'),
+        h('p', null, 'Shorts, motion and game-ready animation, from concept to final render. Tell me about your idea and I will reply with a plan and a price.'),
+        h('a', { href: '/contact' }, 'Brief me on a project'),
+      ),
+      h(
+        'article',
+        { class: 'offer__card' },
+        h('h2', null, '3D printing'),
+        h('p', null, 'Custom prints, props and miniatures. Set the details, see an instant estimate and send the request.'),
+        h('a', { href: '/prints' }, 'Get a print quote'),
+      ),
+    ),
     rows.length ? h('ul', { class: 'svc-list' }, rows) : h('p', { class: 'state' }, 'Services are being updated.'),
     h(
       'section',
       { class: 'cta' },
       h('h2', null, 'Have a project in mind?'),
-      h('a', { href: '/contact' }, 'Get in touch'),
+      h('a', { href: '/prints' }, 'Get a quote'),
     ),
   );
 } catch (e) {

@@ -76,6 +76,9 @@ h1, h2, h3, p { margin: 0; }
 .site-nav a, .nav-btn { text-decoration: none; padding: 6px 0; color: var(--muted); border-bottom: 1px solid transparent; transition: color .2s, border-color .2s; }
 .site-nav a:hover, .nav-btn:hover { color: var(--text); }
 .site-nav a[aria-current="page"] { color: var(--text); border-bottom-color: var(--mint); }
+.site-nav a.nav-cta { padding: 6px 16px; border-radius: 999px; background: var(--accent); color: var(--on-accent); border-bottom: 0; }
+.site-nav a.nav-cta:hover { opacity: .88; color: var(--on-accent); }
+.site-nav a.nav-cta[aria-current="page"] { box-shadow: 0 0 0 2px var(--mint); color: var(--on-accent); }
 
 /* ---------- Home: bio and showreel ---------- */
 .home { padding: calc(var(--header-h) + clamp(20px, 3.5vw, 40px)) var(--gutter) 72px; display: grid; gap: clamp(32px, 5vw, 56px); max-width: 1240px; margin: 0 auto; }
@@ -156,6 +159,13 @@ h1, h2, h3, p { margin: 0; }
 .page-head { padding: calc(var(--header-h) + clamp(40px, 8vw, 96px)) var(--gutter) clamp(24px, 4vw, 48px); }
 .page-head h1 { font: 700 clamp(2.4rem, 9vw, 6.25rem)/.95 var(--font-display); letter-spacing: -0.03em; }
 .page-head p { margin-top: 20px; max-width: 46ch; color: var(--muted); font-size: 1.125rem; }
+.offer { display: grid; gap: 20px; padding: 0 var(--gutter) 40px; }
+@media (min-width: 800px) { .offer { grid-template-columns: 1fr 1fr; } }
+.offer__card { padding: clamp(20px, 3vw, 32px); border: 1px solid var(--rule); border-radius: 16px; display: grid; gap: 12px; align-content: start; }
+.offer__card h2 { font: 700 clamp(1.5rem, 3vw, 2rem)/1.1 var(--font-display); letter-spacing: -0.015em; }
+.offer__card p { color: var(--muted); }
+.offer__card a { justify-self: start; margin-top: 8px; padding: 10px 22px; border-radius: 999px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 500; }
+.offer__card a:hover { opacity: .88; }
 .svc-list { list-style: none; margin: 0; padding: 0 var(--gutter) 40px; }
 .svc { display: grid; gap: 12px 32px; padding: 32px 0; border-top: 1px solid var(--rule); }
 @media (min-width: 800px) { .svc { grid-template-columns: 80px minmax(0, 1fr) minmax(0, 1.2fr); } }

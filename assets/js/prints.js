@@ -114,7 +114,7 @@ try {
   const [site, { pricing }] = await Promise.all([api('/api/site'), api('/api/prints')]);
   mountChrome(site, 'prints');
   clear(app).append(
-    h('section', { class: 'page-head' }, h('h1', null, '3D Prints'), h('p', null, 'Custom prints, props and miniatures. Set the details, see an instant estimate, then send the request and Angel confirms the final price.')),
+    h('section', { class: 'page-head' }, h('h1', null, 'Get a quote'), h('p', null, 'Custom 3D prints, props and miniatures: set the details, see an instant estimate, then send the request and Angel confirms the final price. Need animation instead? ', h('a', { href: '/contact' }, 'Send a brief'), '.')),
     h('div', { class: 'qt-wrap' }, buildQuote(pricing)),
   );
 } catch (e) {

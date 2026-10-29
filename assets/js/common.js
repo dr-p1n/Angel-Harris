@@ -19,21 +19,19 @@ export const safeLink = (u) => (/^https?:\/\//.test(u || '') ? u : null);
 // Header and footer are built here so every page shares one copy.
 export function mountChrome(site, active) {
   const { settings } = site;
-  const link = (href, label, key) =>
-    h('a', { href, 'aria-current': active === key ? 'page' : null }, label);
+  const link = (href, label, ...keys) =>
+    h('a', { href, 'aria-current': keys.includes(active) ? 'page' : null }, label);
 
   const header = h(
     'header',
     { class: 'site-header' },
-    h('a', { class: 'brand', href: '/' }, 'Angel Harris'),
+    h('a', { class: 'brand', href: '/', 'aria-label': 'Angel Harris, home' }, 'Angel Harris'),
     h(
       'nav',
       { class: 'site-nav', 'aria-label': 'Main' },
-      link('/', 'Home', 'home'),
-      link('/projects', 'Projects', 'projects'),
-      link('/prints', '3D Prints', 'prints'),
+      link('/projects', 'Projects', 'projects', 'project'),
       link('/services', 'Services', 'services'),
-      link('/contact', 'Contact', 'contact'),
+      h('a', { class: 'nav-cta', href: '/prints', 'aria-current': active === 'prints' ? 'page' : null }, 'Get a quote'),
     ),
   );
 
@@ -48,6 +46,7 @@ export function mountChrome(site, active) {
     'footer',
     { class: 'site-footer' },
     h('span', null, `© ${year} Angel Harris`),
+    h('a', { href: '/contact' }, 'Contact'),
     settings.location ? h('span', null, settings.location) : null,
     settings.email ? h('a', { href: `mailto:${settings.email}` }, settings.email) : null,
     socials.map(([label, url]) => h('a', { href: url, rel: 'noopener', target: '_blank' }, label)),

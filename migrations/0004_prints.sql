@@ -26,4 +26,4 @@ UPDATE settings
    SET value = '[{"slug":"animation","label":"Digital animation"},{"slug":"prints","label":"3D prints"}]'
  WHERE key = 'categories'
    AND value = '[{"slug":"brand","label":"Brand"},{"slug":"development","label":"Development"},{"slug":"design","label":"Design"}]';
-UPDATE settings SET value = 'Animation, games and small printed things.' WHERE key = 'tagline' AND value = 'Brand, development and design.';
+UPDATE settings SET value = '3D animation and 3D printing.' WHERE key = 'tagline' AND value = 'Brand, development and design.';

@@ -39,20 +39,14 @@ INSERT INTO project_media (project_id, kind, url, caption, position)
 SELECT p.id, 'image', '/assets/placeholder/p' || (((p.id + 2) % 6) + 1) || '.svg', '', 2 FROM projects p;
 
 INSERT INTO services (title, description, details, published, position) VALUES
- ('Brand identity', 'Logos, visual systems and guidelines that scale across every touchpoint.', 'Strategy workshop
-Logo and wordmark
-Colour and type
-Brand guidelines', 1, 1),
- ('Web design and development', 'Fast, accessible websites built to show your work at its best.', 'UX and UI design
-Front-end build
-Performance tuning
-Launch support', 1, 2),
- ('Art direction', 'Concept and creative direction for campaigns, content and launches.', 'Campaign concepts
-Shoot direction
-Asset rollout', 1, 3),
- ('Packaging and print', 'Physical design from packaging to editorial and collateral.', 'Packaging
-Editorial layout
-Print production files', 1, 4);
+ ('Digital animation', 'Shorts, motion pieces and game animation, from concept to final render.', 'Concept and storyboard
+Character and environment modelling
+Animation and rigging
+Final render and delivery', 1, 1),
+ ('3D printing', 'Custom prints, props and miniatures made to order.', 'Instant online estimate
+Modelling from your reference
+Finishing and painting
+Delivery or pickup', 1, 2);
 
 UPDATE settings SET value = 'Placeholder biography. Angel will replace this text from the admin portal.' WHERE key = 'about';
 UPDATE settings SET value = 'Based anywhere' WHERE key = 'location';
@@ -94,7 +88,7 @@ INSERT INTO tasks (title, notes, priority, status, due_date, recurrence, project
 
 -- Match the site's real structure: digital animation and 3D prints (shorts and games are tags).
 UPDATE settings SET value = '[{"slug":"animation","label":"Digital animation"},{"slug":"prints","label":"3D prints"}]' WHERE key = 'categories';
-UPDATE settings SET value = 'Animation, games and small printed things.' WHERE key = 'tagline';
+UPDATE settings SET value = '3D animation and 3D printing.' WHERE key = 'tagline';
 UPDATE projects SET slug = 'the-lighthouse-keeper', title = 'The Lighthouse Keeper', category = 'animation', summary = 'A short about a lighthouse keeper and a very small robot.', client = '', role = 'Director, animator', tags = 'Short,Blender' WHERE id = 1;
 UPDATE projects SET slug = 'pixel-harbor', title = 'Pixel Harbor', category = 'animation', summary = 'A cosy harbour-town game with hand-animated characters.', client = '', role = 'Art and animation', tags = 'Game,Unity' WHERE id = 2;
 UPDATE projects SET slug = 'ember', title = 'Ember', category = 'animation', summary = 'A two-minute short about the last campfire.', client = '', role = 'Director, animator', tags = 'Short,Blender' WHERE id = 3;

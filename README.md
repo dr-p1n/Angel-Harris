@@ -18,7 +18,7 @@ No framework, no build step, no npm dependencies.
 | `mailer/` | Tiny separate Worker that emails Angel when a contact message arrives |
 | `dev/wrangler.toml` | Local-development config only; Cloudflare ignores it |
 
-Public routes: `/` (short bio + showreel only), `/projects` (catalogue: digital animation and 3D prints; shorts and games are tags), `/work/<slug>` (one project), `/prints` (3D print quote generator), `/services`, `/contact`. Admin: `/admin/`.
+Main navigation: Projects (`/projects`), Services (digital animation and 3D printing, with links to start either), Get a quote (`/prints`). There is no Home tab: the logo links to `/`. Public routes: `/` (short bio + showreel only), `/projects` (catalogue: digital animation and 3D prints; shorts and games are tags), `/work/<slug>` (one project), `/prints` (3D print quote generator), `/services`, `/contact` (linked from the footer and the animation brief button). Admin: `/admin/`.
 
 The client portal (`/client/<token>`) is built but **switched off**: the route and its API return 404 and the admin hides every client-link control. It turns on when the Pages environment variable `CLIENT_PORTAL` is set to `on` (see `functions/_lib/features.js`).
 

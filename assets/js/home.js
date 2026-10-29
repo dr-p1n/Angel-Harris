@@ -2,9 +2,9 @@ import { api, clear, h, mountChrome, paragraphs, showError } from './common.js';
 
 const app = document.getElementById('app');
 
-const FALLBACK_TAGLINE = 'Animation, games and small printed things.';
+const FALLBACK_TAGLINE = '3D animation and 3D printing.';
 const FALLBACK_BIO =
-  'Placeholder bio. Angel Harris is a digital animator who makes animated shorts and games, and prints small things in 3D on the side. A few honest sentences about the work, the tools and what drives it will go here.';
+  'Placeholder bio. Angel Harris is a 3D animator who makes animated shorts and games, and takes on custom 3D printing. A few honest sentences about the work, the tools and what drives it will go here.';
 
 // The showreel is the whole point of the page: an embedded Vimeo/YouTube video, or a framed placeholder until one is set.
 function buildReel(embed) {
